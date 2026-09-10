@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# QiuForm 服务器安装脚本（在服务器上以 root 运行）
+# QForm 服务器安装脚本（在服务器上以 root 运行）
 #
 #   bash deploy/setup.sh
 #

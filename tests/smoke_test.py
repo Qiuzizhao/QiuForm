@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""QiuForm 端到端冒烟测试。
+"""QForm 端到端冒烟测试。
 
 先把站点跑起来，再执行：
     python run.py --port 8000
@@ -136,7 +136,7 @@ def main():
     user = f"tester{stamp}"
     password = "test-pass-123"
 
-    print(f"\nQiuForm 冒烟测试  →  {BASE}\n")
+    print(f"\nQForm 冒烟测试  →  {BASE}\n")
     client = Client()
 
     # ---------------------------------------------------------- 账号

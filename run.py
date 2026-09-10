@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""QiuForm 启动入口。
+"""QForm 启动入口。
 
     python run.py                 # 默认 8000 端口
     python run.py --port 9000
@@ -32,7 +32,7 @@ except ImportError as exc:  # pragma: no cover
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="启动 QiuForm")
+    parser = argparse.ArgumentParser(description="启动 QForm")
     parser.add_argument("--host", default=os.environ.get("QIUFORM_HOST", "0.0.0.0"),
                         help="监听地址，默认 0.0.0.0（可用 QIUFORM_HOST 指定）")
     parser.add_argument("--port", type=int,
@@ -46,7 +46,7 @@ def main() -> int:
     shown_host = "127.0.0.1" if args.host in ("0.0.0.0", "::") else args.host
 
     print()
-    print("  QiuForm 已启动")
+    print("  QForm 已启动")
     print(f"    本机访问    http://{shown_host}:{args.port}/")
     if args.host in ("0.0.0.0", "::"):
         print(f"    局域网访问  http://{local_ip()}:{args.port}/")
@@ -66,7 +66,7 @@ def main() -> int:
         try:
             from waitress import serve
             serve(app, host=args.host, port=args.port, threads=8,
-                  ident="QiuForm")
+                  ident="QForm")
             return 0
         except ImportError:
             print("  提示：未安装 waitress，改用 Flask 自带服务器")

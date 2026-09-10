@@ -177,7 +177,7 @@ curl -X POST {{ urls.api }} -F "category=橡皮" -F "file=@photo.jpg"</pre>
               </div>
               <a class="btn btn-sm btn-ghost" style="margin-top:10px"
                  href="{{ url_for('tasks.qr_svg', apiid=task.apiid) }}"
-                 download="qiuform-{{ task.apiid }}.svg">
+                 download="qform-{{ task.apiid }}.svg">
                 {{ icon('download', 14) }} 下载二维码
               </a>
             </div>

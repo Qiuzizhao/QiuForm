@@ -1,4 +1,4 @@
-# QiuForm systemd 服务
+# QForm systemd 服务
 #
 # 这个文件里的 __APP_DIR__ / __DATA_DIR__ / __PORT__ 由 deploy/setup.sh
 # 替换成实际路径后安装到 /etc/systemd/system/qiuform.service。
@@ -6,7 +6,7 @@
 # 手动改端口、改域名，改这里的 Environment 再 `systemctl restart qiuform`。
 
 [Unit]
-Description=QiuForm - 给网页收数据的接口服务
+Description=QForm - 给网页收数据的接口服务
 Documentation=https://github.com/
 After=network-online.target
 Wants=network-online.target

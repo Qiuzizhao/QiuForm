@@ -1,4 +1,4 @@
-"""QiuForm —— 给任意网页配一个数据接口。
+"""QForm —— 给任意网页配一个数据接口。
 
 产品的核心只有一句话：一个任务 = 一个公开的读写接口地址。
 围绕它再长出账号、页面托管、数据查看这些外围能力。
@@ -123,7 +123,7 @@ def create_app(config: dict = None) -> Flask:
     app.register_blueprint(api.bp)
 
     app.jinja_env.filters["human_size"] = human_size
-    app.jinja_env.globals["SITE_NAME"] = "QiuForm"
+    app.jinja_env.globals["SITE_NAME"] = "QForm"
     app.jinja_env.globals["mode_label"] = db.mode_label
     app.jinja_env.globals["MODES"] = db.MODES
     # 模板里也要用对外地址，不能直接拿 request.host_url ——

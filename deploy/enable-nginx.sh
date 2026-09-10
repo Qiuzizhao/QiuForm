@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# 启用 QiuForm 的 nginx 站点（在服务器上以 root 运行）
+# 启用 QForm 的 nginx 站点（在服务器上以 root 运行）
 #
 #   sudo bash deploy/enable-nginx.sh
 #

@@ -57,7 +57,7 @@
 </section>
 
 {# ---------------------------------------------------------------- 步骤 #}
-<section class="lp-section">
+<section class="lp-section lp-section-last">
   <header class="lp-head">
     <span class="lp-eyebrow">用法</span>
     <h2>三步就用起来</h2>
@@ -80,16 +80,6 @@
       <p>后台逐条查看、导出表格；也可以另做一个页面读同一个地址，当实时大屏。</p>
     </li>
   </ol>
-</section>
-
-{# ---------------------------------------------------------------- 收尾 #}
-<section class="lp-final">
-  <div class="lp-final-card">
-    <h2>建一个任务，拿到接口地址</h2>
-    <p>注册之后几秒钟就能开始收数据。</p>
-    <a class="btn btn-lg btn-primary" href="{{ url_for('auth.register') }}">
-      创建第一个任务 {{ icon('arrow-right', 16) }}</a>
-  </div>
 </section>
 
 {% endblock %}

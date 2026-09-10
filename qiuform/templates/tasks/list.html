@@ -63,8 +63,20 @@
           <td data-label="页面" class="num">{{ task.page_count }}</td>
           <td data-label="创建" class="muted tiny nowrap">{{ task.created_at }}</td>
           <td class="actions">
-            <a class="btn btn-sm" href="{{ url_for('tasks.overview', apiid=task.apiid) }}">
-              打开 {{ icon('arrow-right', 14) }}</a>
+            {% if task.student_page and task.teacher_page %}
+              <div class="actions-stack">
+                <a class="btn btn-sm" target="_blank" rel="noopener"
+                   href="{{ url_for('public.page_root', apiid=task.apiid) }}">
+                  {{ icon('home', 14) }} 学生端</a>
+                <a class="btn btn-sm" target="_blank" rel="noopener"
+                   href="{{ url_for('public.page_file', apiid=task.apiid,
+                                    filename=task.teacher_page) }}">
+                  {{ icon('grid', 14) }} 教师端</a>
+              </div>
+            {% else %}
+              <a class="btn btn-sm" href="{{ url_for('tasks.overview', apiid=task.apiid) }}">
+                打开 {{ icon('arrow-right', 14) }}</a>
+            {% endif %}
           </td>
         </tr>
         {% endfor %}

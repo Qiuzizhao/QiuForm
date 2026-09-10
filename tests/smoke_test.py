@@ -344,6 +344,44 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
     check("主页根路径会跳到页面",
           client.raw("GET", f"/p/{apiid}/")[0] == 200)
 
+    # ------------------------------------------------------ 学生端 / 教师端
+    print("\n5b. 学生端 / 教师端两个角色")
+    teacher_html = page_html.replace("课堂反馈", "教师看板")
+    client.load_csrf(f"/tasks/{apiid}/pages")
+    status, html, _, _ = client.post(
+        f"/tasks/{apiid}/pages/upload",
+        {"csrf_token": client.csrf, "role": "teacher"},
+        files=[("files", "teacher.html", "text/html",
+                teacher_html.encode("utf-8"))])
+    check("上传时可以直接指定教师端", status == 200 and "教师端" in html,
+          f"status={status}")
+
+    client.load_csrf(f"/tasks/{apiid}/pages")
+    status, html, _, _ = client.post(
+        f"/tasks/{apiid}/pages/teacher.html/role",
+        {"csrf_token": client.csrf, "role": "student"})
+    check("可以把另一个页面改设成学生端", status == 200, f"status={status}")
+    status, text, _, _ = client.get(f"/p/{apiid}/")
+    check("学生端换人后根路径跟着换",
+          status == 200 and "教师看板" in text, f"status={status}")
+
+    client.load_csrf(f"/tasks/{apiid}/pages")
+    client.post(
+        f"/tasks/{apiid}/pages/teacher.html/role",
+        {"csrf_token": client.csrf, "role": "teacher"})
+    client.load_csrf(f"/tasks/{apiid}/pages")
+    status, html, _, _ = client.post(
+        f"/tasks/{apiid}/pages/index.html/role",
+        {"csrf_token": client.csrf, "role": "student"})
+    check("学生端和教师端可以同时存在",
+          status == 200 and "学生端" in html and "教师端" in html,
+          f"status={status}")
+
+    status, home, _, _ = client.get("/")
+    check("任务列表出现学生端 / 教师端两个入口",
+          "学生端" in home and "教师端" in home
+          and f"/p/{apiid}/teacher.html" in home, f"status={status}")
+
     # 配套资源
     client.load_csrf(f"/tasks/{apiid}/pages")
     status, html, _, _ = client.post(

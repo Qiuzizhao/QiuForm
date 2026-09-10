@@ -20,8 +20,10 @@
             <div class="filemeta">
               <div class="filename">
                 {{ item.filename }}
-                {% if item.is_primary %}
-                  <span class="chip chip-read_write">{{ icon('home', 12) }} 主页</span>
+                {% if item.role == 'student' %}
+                  <span class="chip chip-read_write">{{ icon('home', 12) }} 学生端</span>
+                {% elif item.role == 'teacher' %}
+                  <span class="chip chip-read_only">{{ icon('grid', 12) }} 教师端</span>
                 {% endif %}
               </div>
               <div class="tiny muted" style="margin-top:2px">
@@ -32,12 +34,34 @@
               <a class="btn btn-sm" target="_blank"
                  href="{{ url_for('public.page_file', apiid=task.apiid, filename=item.filename) }}">
                 {{ icon('eye', 14) }} 预览</a>
-              {% if item.is_html and not item.is_primary %}
-              <form method="post"
-                    action="{{ url_for('tasks.set_primary', apiid=task.apiid, filename=item.filename) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm" type="submit" title="设为任务主页">设为主页</button>
-              </form>
+              {% if item.is_html %}
+                {% if item.role != 'student' %}
+                <form method="post"
+                      action="{{ url_for('tasks.set_page_role', apiid=task.apiid, filename=item.filename) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="role" value="student">
+                  <button class="btn btn-sm" type="submit"
+                          title="设为学生端：扫码打开的就是这个页面">设为学生端</button>
+                </form>
+                {% endif %}
+                {% if item.role != 'teacher' %}
+                <form method="post"
+                      action="{{ url_for('tasks.set_page_role', apiid=task.apiid, filename=item.filename) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="role" value="teacher">
+                  <button class="btn btn-sm" type="submit"
+                          title="设为教师端：看数据的那个页面">设为教师端</button>
+                </form>
+                {% endif %}
+                {% if item.role %}
+                <form method="post"
+                      action="{{ url_for('tasks.set_page_role', apiid=task.apiid, filename=item.filename) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="role" value="">
+                  <button class="btn btn-sm btn-ghost" type="submit"
+                          title="取消学生端 / 教师端设置">取消</button>
+                </form>
+                {% endif %}
               {% endif %}
               <form method="post"
                     action="{{ url_for('tasks.delete_page', apiid=task.apiid, filename=item.filename) }}"
@@ -79,13 +103,15 @@
                    accept=".html,.htm,.css,.js,.json,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico,.woff,.woff2,.ttf">
           </div>
 
-          <label class="radio-card" style="margin-top:14px">
-            <input type="checkbox" name="make_primary" value="1">
-            <span class="radio-card-body">
-              <span class="radio-card-title">上传后设为任务主页</span>
-              <span class="radio-card-desc">不勾选的话，第一个上传的 HTML 会自动成为主页。</span>
-            </span>
-          </label>
+          <div class="field" style="margin-top:14px">
+            <label class="label" for="upload-role">上传后设为</label>
+            <select class="input" id="upload-role" name="role">
+              <option value="">自动（还没有学生端时，第一个 HTML 当学生端）</option>
+              <option value="student">学生端（扫码打开的那个页面）</option>
+              <option value="teacher">教师端（看数据的那个页面）</option>
+            </select>
+            <p class="hint">一个任务最多一个学生端、一个教师端，后面可以随时改。</p>
+          </div>
 
           <button class="btn btn-primary btn-block" type="submit" style="margin-top:14px">
             {{ icon('upload', 15) }} 开始上传
@@ -111,11 +137,20 @@
               </div>
             </div>
           </div>
-          <div class="icon-list-item">
+            <div class="icon-list-item">
             <div class="icon-list-icon">{{ icon('home', 15) }}</div>
             <div>
-              <div class="icon-list-title">自动设主页</div>
-              <div class="icon-list-desc">第一个上传的 HTML 直接成为任务主页。</div>
+              <div class="icon-list-title">自动设学生端</div>
+              <div class="icon-list-desc">还没有学生端时，第一个上传的 HTML 直接顶上。</div>
+            </div>
+          </div>
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('grid', 15) }}</div>
+            <div>
+              <div class="icon-list-title">学生端 / 教师端各一个</div>
+              <div class="icon-list-desc">
+                学生端是扫码打开的那个页面，教师端是看数据的那个页面，两个可以分开设置。
+              </div>
             </div>
           </div>
           <div class="icon-list-item">

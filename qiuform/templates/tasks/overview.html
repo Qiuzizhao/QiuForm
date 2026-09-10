@@ -175,6 +175,14 @@ curl -X POST {{ urls.api }} -F "category=橡皮" -F "file=@photo.jpg"</pre>
                 <button class="btn btn-sm" data-copy="#page-url">
                   {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
               </div>
+              {% if teacher_url %}
+              <p class="small muted" style="margin-top:12px">教师端点这个地址看数据：</p>
+              <div class="copybox wrap" style="margin-top:6px">
+                <span class="value" id="teacher-url">{{ teacher_url }}</span>
+                <button class="btn btn-sm" data-copy="#teacher-url">
+                  {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+              </div>
+              {% endif %}
               <a class="btn btn-sm btn-ghost" style="margin-top:10px"
                  href="{{ url_for('tasks.qr_svg', apiid=task.apiid) }}"
                  download="qform-{{ task.apiid }}.svg">

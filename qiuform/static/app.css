@@ -361,6 +361,9 @@ code, pre, .mono {
 .table .num { text-align: right; font-variant-numeric: tabular-nums; }
 .table .actions { text-align: right; white-space: nowrap; }
 .table .cell-lead { font-weight: 560; color: var(--ink); }
+/* 任务列表里"学生端 / 教师端"两个按钮竖着排成一列 */
+.actions-stack { display: inline-flex; flex-direction: column; gap: 6px; }
+.actions-stack .btn { justify-content: center; min-width: 92px; }
 .cell-clip {
   max-width: 280px; overflow: hidden; text-overflow: ellipsis;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;

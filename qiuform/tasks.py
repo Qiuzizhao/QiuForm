@@ -4,6 +4,7 @@ import csv
 import io
 import json
 from pathlib import Path
+from urllib.parse import quote
 
 from flask import (Blueprint, abort, current_app, flash, g, jsonify, redirect,
                    render_template, request, url_for)
@@ -58,9 +59,13 @@ def overview(apiid: str):
     total = db.count_submissions(apiid)
     recent = db.list_submissions(apiid, limit=5)
     pages = db.list_pages(apiid)
+    teacher_page = db.role_page(apiid, "teacher")
     return render_template(
         "tasks/overview.html", task=task, urls=urls, total=total,
         recent=recent, pages=pages, page_count=len(pages), tab="overview",
+        teacher_page=teacher_page,
+        teacher_url=(f"{urls['page']}{quote(teacher_page['filename'])}"
+                     if teacher_page else ""),
         qr_svg=qrcode_gen.render_svg(urls["page"], scale=5),
         upload_max_mb=current_app.config["MAX_UPLOAD_BYTES"] // 1024 // 1024,
         upload_exts=sorted(ext.lstrip(".") for ext in storage.ALLOWED_UPLOAD_EXT),
@@ -91,9 +96,14 @@ def upload_pages(apiid: str):
         return redirect(url_for("tasks.pages", apiid=apiid))
 
     limit = current_app.config["MAX_PAGE_BYTES"]
-    make_primary = request.form.get("make_primary") == "1"
+    # 上传时可以直接指定这个文件是学生端还是教师端
+    role = (request.form.get("role") or "").strip()
+    if request.form.get("make_primary") == "1":
+        role = "student"
+    if role not in db.PAGE_ROLES:
+        role = ""
 
-    saved, rewritten_total, skipped = [], 0, []
+    saved, rewritten_total, skipped, applied_role = [], 0, [], ""
     for item in files:
         ext = Path(item.filename).suffix.lower()
         if ext not in storage.ASSET_EXT:
@@ -111,20 +121,22 @@ def upload_pages(apiid: str):
             data = text.encode("utf-8")
 
         name = storage.save_page_file(apiid, item.filename, data)
-        is_html = storage.is_html(name)
         # 所有文件都要登记，否则 css/js/图片这些配套资源访问不到
-        has_primary = bool(db.primary_page(apiid))
         db.upsert_page(
             apiid, name, item.filename, len(data),
-            make_primary=is_html and (make_primary or not has_primary),
+            role=role if storage.is_html(name) else "",
         )
         saved.append(name)
+        if role and storage.is_html(name):
+            applied_role = role
 
     if saved:
         if any(storage.is_html(n) for n in saved):
             flash(f"已上传 {len(saved)} 个文件。", "success")
         else:
             flash(f"已上传 {len(saved)} 个配套资源。", "success")
+        if applied_role:
+            flash(f"已把{db.PAGE_ROLES[applied_role]}指向新上传的页面。", "success")
         if rewritten_total:
             flash(f"顺手把页面里 {rewritten_total} 处接口地址改写成了本任务的地址。",
                   "info")
@@ -133,15 +145,23 @@ def upload_pages(apiid: str):
     return redirect(url_for("tasks.pages", apiid=apiid))
 
 
+@bp.route("/tasks/<apiid>/pages/<path:filename>/role", methods=["POST"])
 @bp.route("/tasks/<apiid>/pages/<path:filename>/primary", methods=["POST"])
 @security.login_required
-def set_primary(apiid: str):
+def set_page_role(apiid: str, filename: str):
     _owned_or_404(apiid)
     if not storage.is_html(filename):
-        flash("只有 HTML 文件能设为主页。", "error")
+        flash("只有 HTML 文件能设成学生端或教师端。", "error")
         return redirect(url_for("tasks.pages", apiid=apiid))
-    if db.set_primary_page(apiid, filename):
-        flash(f"已把 {filename} 设为主页。", "success")
+
+    role = (request.form.get("role") or "").strip()
+    if role not in db.PAGE_ROLES:
+        role = ""
+    if db.set_page_role(apiid, filename, role):
+        if role:
+            flash(f"已把 {filename} 设为{db.PAGE_ROLES[role]}。", "success")
+        else:
+            flash(f"已取消 {filename} 的角色。", "success")
     else:
         flash("找不到这个文件。", "error")
     return redirect(url_for("tasks.pages", apiid=apiid))

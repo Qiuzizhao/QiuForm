@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS pages (
     original_name TEXT NOT NULL,
     size          INTEGER NOT NULL DEFAULT 0,
     is_primary    INTEGER NOT NULL DEFAULT 0,
+    -- 页面角色：'' / 'student'（学生端，也就是 /p/<任务>/ 打开的那个）/ 'teacher'
+    role          TEXT NOT NULL DEFAULT '',
     created_at    TEXT NOT NULL,
     UNIQUE (apiid, filename)
 );
@@ -115,6 +117,16 @@ def init_db():
     conn = get_db()
     with conn:
         conn.executescript(SCHEMA)
+        _migrate(conn)
+
+
+def _migrate(conn):
+    """给老库补新加的列。"""
+    cols = {row["name"] for row in conn.execute("PRAGMA table_info(pages)")}
+    if "role" not in cols:
+        # 以前只有"主页"一个概念，它对应的就是现在的学生端
+        conn.execute("ALTER TABLE pages ADD COLUMN role TEXT NOT NULL DEFAULT ''")
+        conn.execute("UPDATE pages SET role = 'student' WHERE is_primary = 1")
 
 
 def init_app(app):
@@ -208,7 +220,13 @@ def list_tasks(user_id: int) -> list:
         """
         SELECT t.*,
                (SELECT COUNT(*) FROM submissions s WHERE s.apiid = t.apiid) AS total,
-               (SELECT COUNT(*) FROM pages p WHERE p.apiid = t.apiid) AS page_count
+               (SELECT COUNT(*) FROM pages p WHERE p.apiid = t.apiid) AS page_count,
+               (SELECT p.filename FROM pages p
+                 WHERE p.apiid = t.apiid AND p.role = 'student'
+                 ORDER BY p.id LIMIT 1) AS student_page,
+               (SELECT p.filename FROM pages p
+                 WHERE p.apiid = t.apiid AND p.role = 'teacher'
+                 ORDER BY p.id LIMIT 1) AS teacher_page
           FROM tasks t
          WHERE t.owner_id = ?
          ORDER BY t.id DESC
@@ -258,34 +276,70 @@ def delete_task(apiid: str, user_id: int) -> bool:
 
 # ---------------------------------------------------------------- 页面
 
+# 页面角色：学生端（扫码打开的那个）和教师端，各自最多一个
+PAGE_ROLES = {"student": "学生端", "teacher": "教师端"}
+
+
+def _apply_role(conn, apiid: str, filename: str, role: str) -> None:
+    """在已经打开的事务里给页面定角色；role 为空表示取消。"""
+    if role in PAGE_ROLES:
+        # 同一个角色只能有一个页面
+        conn.execute("UPDATE pages SET role = '' WHERE apiid = ? AND role = ?",
+                     (apiid, role))
+        conn.execute("UPDATE pages SET role = ? WHERE apiid = ? AND filename = ?",
+                     (role, apiid, filename))
+    else:
+        conn.execute("UPDATE pages SET role = '' WHERE apiid = ? AND filename = ?",
+                     (apiid, filename))
+    # is_primary 是 role='student' 的影子字段，公开页面靠它找主页
+    conn.execute(
+        "UPDATE pages SET is_primary = CASE WHEN role = 'student' THEN 1 ELSE 0 END"
+        " WHERE apiid = ?", (apiid,))
+
+
 def upsert_page(apiid: str, filename: str, original_name: str, size: int,
-                make_primary: bool) -> None:
+                make_primary: bool = False, role: str = "") -> None:
     conn = get_db()
     with conn:
         existing = conn.execute(
             "SELECT id FROM pages WHERE apiid = ? AND filename = ?", (apiid, filename)
         ).fetchone()
-        if make_primary:
-            conn.execute("UPDATE pages SET is_primary = 0 WHERE apiid = ?", (apiid,))
         if existing:
             conn.execute(
-                "UPDATE pages SET original_name = ?, size = ?,"
-                " is_primary = CASE WHEN ? THEN 1 ELSE is_primary END"
+                "UPDATE pages SET original_name = ?, size = ?"
                 " WHERE apiid = ? AND filename = ?",
-                (original_name, size, 1 if make_primary else 0, apiid, filename),
+                (original_name, size, apiid, filename),
             )
         else:
             conn.execute(
                 "INSERT INTO pages (apiid, filename, original_name, size,"
-                " is_primary, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (apiid, filename, original_name, size,
-                 1 if make_primary else 0, now()),
+                " is_primary, role, created_at) VALUES (?, ?, ?, ?, 0, '', ?)",
+                (apiid, filename, original_name, size, now()),
             )
+
+        wanted = role if role in PAGE_ROLES else ("student" if make_primary else "")
+        if not wanted and _is_html_name(filename):
+            # 还没有学生端时，第一个上传的 HTML 自动顶上
+            has_student = conn.execute(
+                "SELECT 1 FROM pages WHERE apiid = ? AND role = 'student' LIMIT 1",
+                (apiid,),
+            ).fetchone()
+            if not has_student:
+                wanted = "student"
+        if wanted:
+            _apply_role(conn, apiid, filename, wanted)
+
+
+def _is_html_name(filename: str) -> bool:
+    name = (filename or "").lower()
+    return name.endswith(".html") or name.endswith(".htm")
 
 
 def list_pages(apiid: str) -> list:
     rows = get_db().execute(
-        "SELECT * FROM pages WHERE apiid = ? ORDER BY is_primary DESC, id ASC",
+        "SELECT * FROM pages WHERE apiid = ?"
+        " ORDER BY CASE role WHEN 'student' THEN 0 WHEN 'teacher' THEN 1 ELSE 2 END,"
+        " id ASC",
         (apiid,),
     ).fetchall()
     return [dict(r) for r in rows]
@@ -300,13 +354,27 @@ def get_page(apiid: str, filename: str):
 
 def primary_page(apiid: str):
     row = get_db().execute(
-        "SELECT * FROM pages WHERE apiid = ? ORDER BY is_primary DESC, id ASC LIMIT 1",
+        "SELECT * FROM pages WHERE apiid = ? AND role = 'student'"
+        " ORDER BY id ASC LIMIT 1",
         (apiid,),
     ).fetchone()
     return dict(row) if row else None
 
 
-def set_primary_page(apiid: str, filename: str) -> bool:
+def role_page(apiid: str, role: str):
+    """取出某个角色（student / teacher）的页面。"""
+    if role not in PAGE_ROLES:
+        return None
+    row = get_db().execute(
+        "SELECT * FROM pages WHERE apiid = ? AND role = ? ORDER BY id ASC LIMIT 1",
+        (apiid, role),
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def set_page_role(apiid: str, filename: str, role: str) -> bool:
+    if role and role not in PAGE_ROLES:
+        return False
     conn = get_db()
     with conn:
         exists = conn.execute(
@@ -314,31 +382,29 @@ def set_primary_page(apiid: str, filename: str) -> bool:
         ).fetchone()
         if not exists:
             return False
-        conn.execute("UPDATE pages SET is_primary = 0 WHERE apiid = ?", (apiid,))
-        conn.execute(
-            "UPDATE pages SET is_primary = 1 WHERE apiid = ? AND filename = ?",
-            (apiid, filename),
-        )
+        _apply_role(conn, apiid, filename, role)
     return True
 
 
 def delete_page(apiid: str, filename: str) -> bool:
     conn = get_db()
     with conn:
+        row = conn.execute(
+            "SELECT role FROM pages WHERE apiid = ? AND filename = ?", (apiid, filename)
+        ).fetchone()
         cur = conn.execute(
             "DELETE FROM pages WHERE apiid = ? AND filename = ?", (apiid, filename)
         )
-        if cur.rowcount:
-            # 删掉的是主页的话，把剩下第一个顶上来
+        if cur.rowcount and row and row["role"] == "student":
+            # 删掉的正好是学生端，把剩下第一个 HTML 顶上来
             rest = conn.execute(
-                "SELECT filename FROM pages WHERE apiid = ? ORDER BY id LIMIT 1",
+                "SELECT filename FROM pages WHERE apiid = ?"
+                " AND (filename LIKE '%.html' OR filename LIKE '%.htm')"
+                " ORDER BY id LIMIT 1",
                 (apiid,),
             ).fetchone()
             if rest:
-                conn.execute(
-                    "UPDATE pages SET is_primary = 1 WHERE apiid = ? AND filename = ?",
-                    (apiid, rest["filename"]),
-                )
+                _apply_role(conn, apiid, rest["filename"], "student")
     return cur.rowcount > 0
 
 

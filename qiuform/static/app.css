@@ -481,6 +481,14 @@ code, pre, .mono {
 .qr-item figcaption {
   margin-top: 8px; font-size: .8rem; font-weight: 620; color: var(--ink-2);
 }
+/* 二维码也能点开看大图 */
+.qr-frame { cursor: zoom-in; transition: border-color .13s, box-shadow .13s; }
+.qr-frame:hover { border-color: var(--accent-line); box-shadow: var(--shadow-sm); }
+.qr-frame:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lightbox img.is-qr {
+  background: #fff; padding: 14px; border-radius: 14px;
+  width: min(78vmin, 560px); max-width: 92vw; height: auto;
+}
 .qr-copy { align-items: flex-start; }
 .qr-pair .qr-frame { width: 100%; display: grid; place-items: center; }
 .qr-pair .qr-frame svg { width: 100%; max-width: 150px; height: auto; }

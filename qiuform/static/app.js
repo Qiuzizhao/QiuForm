@@ -83,6 +83,7 @@
     if (!lightbox || lightbox.hidden) return;
     lightbox.hidden = true;
     lightboxImg.removeAttribute('src');
+    lightboxImg.classList.remove('is-qr');
     document.body.style.overflow = '';
   }
 
@@ -96,12 +97,35 @@
     if (close) close.focus();
   }
 
+  // 页面里的二维码是内联 SVG，序列化成 data URI 就能当图片放大
+  function qrDataUri(svg) {
+    var text = new XMLSerializer().serializeToString(svg);
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
+  }
+
+  function openQr(frame) {
+    if (!lightbox) return;
+    var svg = frame.querySelector('svg');
+    if (!svg) return;
+    var item = frame.closest('.qr-item');
+    var label = item ? (item.querySelector('figcaption') || {}).textContent : '';
+    lightboxImg.classList.add('is-qr');
+    openLightbox(qrDataUri(svg), label ? label + '二维码' : '二维码');
+  }
+
   document.addEventListener('click', function (event) {
     var link = event.target.closest('a[data-lightbox]');
     if (link) {
       event.preventDefault();
+      lightboxImg.classList.remove('is-qr');
       openLightbox(link.getAttribute('href'),
                    link.querySelector('img') ? link.querySelector('img').alt : '');
+      return;
+    }
+    var frame = event.target.closest('.qr-frame');
+    if (frame) {
+      event.preventDefault();
+      openQr(frame);
       return;
     }
     // 点背景或关闭按钮
@@ -109,6 +133,15 @@
         (event.target === lightbox || event.target.closest('#lightbox-close'))) {
       closeLightbox();
     }
+  });
+
+  // 二维码框也支持键盘打开
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    var frame = event.target.closest ? event.target.closest('.qr-frame') : null;
+    if (!frame) return;
+    event.preventDefault();
+    openQr(frame);
   });
 
   document.addEventListener('keydown', function (event) {

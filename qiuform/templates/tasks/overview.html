@@ -168,12 +168,14 @@ curl -X POST {{ urls.api }} -F "category=橡皮" -F "file=@photo.jpg"</pre>
         {% if page_count %}
           <div class="qr-pair">
             <figure class="qr-item">
-              <div class="qr-frame">{{ qr_svg | safe }}</div>
+              <div class="qr-frame" role="button" tabindex="0"
+                   title="点击放大二维码">{{ qr_svg | safe }}</div>
               <figcaption>学生端</figcaption>
             </figure>
             {% if qr_teacher_svg %}
             <figure class="qr-item">
-              <div class="qr-frame">{{ qr_teacher_svg | safe }}</div>
+              <div class="qr-frame" role="button" tabindex="0"
+                   title="点击放大二维码">{{ qr_teacher_svg | safe }}</div>
               <figcaption>教师端</figcaption>
             </figure>
             {% endif %}

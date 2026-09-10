@@ -563,20 +563,9 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
               color-mix(in srgb, var(--accent) 20%, transparent) 0%,
               transparent 70%) no-repeat;
 }
-.lp-pill {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: .78rem; font-weight: 600; color: var(--ink-2);
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-full); padding: 6px 14px; margin-bottom: 24px;
-  box-shadow: var(--shadow-xs);
-}
-.lp-pill-dot {
-  width: 6px; height: 6px; border-radius: 50%; background: var(--good);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 18%, transparent);
-}
 .lp-hero h1 {
   font-size: clamp(2.4rem, 6.5vw, 3.5rem);
-  letter-spacing: -.045em; line-height: 1.06; margin-bottom: 20px;
+  letter-spacing: -.045em; line-height: 1.06; margin-bottom: 22px;
 }
 .lp-sub {
   font-size: 1.06rem; color: var(--muted); line-height: 1.72;
@@ -590,10 +579,9 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   to   { opacity: 1; transform: none; }
 }
 .lp-hero > * { animation: lp-rise .7s cubic-bezier(.22, 1, .36, 1) both; }
-.lp-hero > .lp-pill  { animation-delay: .04s; }
-.lp-hero > h1        { animation-delay: .10s; }
-.lp-hero > .lp-sub   { animation-delay: .16s; }
-.lp-hero > .lp-cta   { animation-delay: .22s; }
+.lp-hero > h1      { animation-delay: .06s; }
+.lp-hero > .lp-sub { animation-delay: .14s; }
+.lp-hero > .lp-cta { animation-delay: .22s; }
 
 /* ------------------------------------------------------- 产品示意窗口 */
 
@@ -642,48 +630,6 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 }
 .lp-head p { font-size: .95rem; color: var(--muted); max-width: 44ch; margin: 0 auto; }
 
-/* ------------------------------------------------------- Bento 网格 */
-
-.lp-bento { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-.lp-span2 { grid-column: span 2; }
-.lp-span3 { grid-column: span 3; }
-
-.lp-card {
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 22px 24px 24px;
-  transition: border-color .18s, box-shadow .18s, transform .18s;
-}
-.lp-card:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-}
-.lp-card-icon {
-  width: 34px; height: 34px; border-radius: 10px; margin-bottom: 15px;
-  display: grid; place-items: center;
-  background: var(--accent-soft); color: var(--accent);
-  border: 1px solid var(--accent-line);
-}
-.lp-card h3 { font-size: .96rem; letter-spacing: -.012em; margin-bottom: 6px; }
-.lp-card p { font-size: .86rem; color: var(--muted); line-height: 1.7; margin: 0; }
-
-.lp-spark { display: block; width: 100%; height: 58px; margin-top: 20px; color: var(--accent); }
-
-.lp-diagram { display: flex; align-items: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-.lp-node {
-  font-size: .78rem; font-weight: 600; color: var(--ink-2);
-  background: var(--surface-3); border: 1px solid var(--line);
-  border-radius: var(--r-full); padding: 5px 13px; flex: none;
-}
-.lp-node-accent {
-  color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line);
-}
-.lp-wire { flex: 1; min-width: 26px; height: 1px; background: var(--line-strong); position: relative; }
-.lp-wire i {
-  position: absolute; right: -2px; top: -3px;
-  width: 6px; height: 6px; border-radius: 50%; background: var(--faint);
-}
-
 /* ------------------------------------------------------------ 步骤 */
 
 .lp-steps {
@@ -718,8 +664,6 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 /* ------------------------------------------------------------ 窄屏 */
 
 @media (max-width: 900px) {
-  .lp-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .lp-span3 { grid-column: span 2; }
   .lp-steps { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
@@ -729,9 +673,6 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   .lp-pane + .lp-pane { border-left: 0; border-top: 1px solid #232b40; }
 }
 @media (max-width: 620px) {
-  .lp-bento { grid-template-columns: minmax(0, 1fr); }
-  .lp-span2, .lp-span3 { grid-column: span 1; }
-  .lp-card { padding: 19px 20px 21px; }
   .lp-final-card { padding: 40px 20px; }
 }
 

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
+{% from "_password.html" import password_field %}
 {% block title %}账号设置 · {{ SITE_NAME }}{% endblock %}
 {% block page_class %}narrow{% endblock %}
 
@@ -37,21 +38,10 @@
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="password">
-      <div class="field">
-        <label class="label" for="current">当前密码</label>
-        <input class="input" id="current" name="current" type="password"
-               autocomplete="current-password" required>
-      </div>
-      <div class="field">
-        <label class="label" for="new">新密码</label>
-        <input class="input" id="new" name="new" type="password"
-               autocomplete="new-password" required minlength="6">
-      </div>
-      <div class="field">
-        <label class="label" for="confirm">确认新密码</label>
-        <input class="input" id="confirm" name="confirm" type="password"
-               autocomplete="new-password" required minlength="6">
-      </div>
+      {{ password_field('current', '当前密码') }}
+      {{ password_field('new', '新密码', autocomplete='new-password', minlength=6) }}
+      {{ password_field('confirm', '确认新密码', autocomplete='new-password',
+                        minlength=6) }}
       <button class="btn" type="submit">修改密码</button>
       <p class="hint">改完需要重新登录。</p>
     </form>

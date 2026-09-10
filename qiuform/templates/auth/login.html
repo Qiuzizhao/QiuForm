@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
+{% from "_password.html" import password_field %}
 {% block title %}登录 · {{ SITE_NAME }}{% endblock %}
 {% block page_class %}narrow{% endblock %}
 
@@ -18,11 +19,7 @@
         <input class="input" id="username" name="username" value="{{ username }}"
                autocomplete="username" autofocus required>
       </div>
-      <div class="field">
-        <label class="label" for="password">密码</label>
-        <input class="input" id="password" name="password" type="password"
-               autocomplete="current-password" required>
-      </div>
+      {{ password_field('password', '密码') }}
       <button class="btn btn-primary btn-block btn-lg" type="submit">
         {{ icon('arrow-right', 16) }} 登录
       </button>

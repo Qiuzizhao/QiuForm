@@ -61,6 +61,13 @@ class Client:
             return resp.status, resp.read(), resp.geturl(), dict(resp.headers)
         except urllib.error.HTTPError as exc:
             return exc.code, exc.read(), exc.geturl(), dict(exc.headers)
+        except urllib.error.URLError as exc:
+            # 网络抖动（DNS、TLS 中断等）不该让整个测试崩溃，
+            # 让它变成一次"失败"更合理
+            body = json.dumps(
+                {"ok": False, "message": f"网络错误：{exc.reason}"}
+            ).encode("utf-8")
+            return 0, body, str(url), {}
 
     def get(self, path):
         status, body, url, headers = self.raw("GET", path)
@@ -141,6 +148,10 @@ def main():
     _, landing, _, _ = client.get("/")
     check("静态资源地址带版本号（更新后不会用到旧缓存）",
           "app.css?v=" in landing and "app.js?v=" in landing)
+
+    check("登录 / 注册的密码框都有「小眼睛」",
+          html.count("data-pw-toggle") == 2,        # 注册页：密码 + 确认密码
+          f"注册页找到 {html.count('data-pw-toggle')} 个")
 
     client.load_csrf("/register")
     check("注册页带 CSRF token", bool(client.csrf))

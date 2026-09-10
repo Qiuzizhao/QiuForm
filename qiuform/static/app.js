@@ -44,6 +44,34 @@
     }
   });
 
+  /* ------------------------------------------------------ 密码可见性 */
+
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-pw-toggle]');
+    if (!button) return;
+
+    var wrap = button.closest('.pw');
+    var input = wrap && wrap.querySelector('input');
+    if (!input) return;
+
+    var visible = input.type === 'text';
+    input.type = visible ? 'password' : 'text';
+
+    var showIcon = button.querySelector('[data-pw-icon="show"]');
+    var hideIcon = button.querySelector('[data-pw-icon="hide"]');
+    if (showIcon) showIcon.hidden = !visible;
+    if (hideIcon) hideIcon.hidden = visible;
+
+    var label = visible ? '显示密码' : '隐藏密码';
+    button.setAttribute('title', label);
+    button.setAttribute('aria-label', label);
+
+    // 点完把光标放回输入框末尾，方便接着打字
+    var end = input.value.length;
+    input.focus();
+    try { input.setSelectionRange(end, end); } catch (err) { /* 忽略 */ }
+  });
+
   /* ---------------------------------------------------------- 拖放上传 */
 
   document.querySelectorAll('[data-drop]').forEach(function (zone) {

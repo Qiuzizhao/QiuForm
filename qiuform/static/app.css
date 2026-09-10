@@ -280,7 +280,8 @@ code, pre, .mono {
   transition: color .13s, background .13s;
 }
 .pw-toggle:hover { color: var(--ink-2); background: var(--surface-3); }
-.pw-toggle span { display: block; line-height: 0; }
+.pw-toggle span { line-height: 0; }
+.pw-toggle span[hidden] { display: none; }
 
 /* 单选卡片：比下拉框更适合"带说明的选项" */
 .radio-cards { display: grid; gap: 8px; }

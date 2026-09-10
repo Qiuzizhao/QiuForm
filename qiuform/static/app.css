@@ -564,7 +564,7 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 /* 数据流示意：这是首页的视觉主体 —— 写进去、读回来 */
 .home-flow {
   display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  gap: 14px; align-items: center; margin: 4px 0 50px;
+  gap: 14px; align-items: center; margin: 4px 0 0;
 }
 .flow-panel { min-width: 0; }
 .flow-label {
@@ -579,28 +579,6 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   .home-flow { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .flow-arrow { transform: rotate(90deg); padding: 2px 0; }
 }
-
-/* 场景网格 */
-.home-scenes-head { text-align: center; margin-bottom: 22px; }
-.home-scenes-head h2 { font-size: 1.05rem; margin-bottom: 8px; }
-.home-section-note {
-  font-size: .86rem; color: var(--muted); line-height: 1.75;
-  max-width: 48ch; margin: 0 auto;
-}
-.home-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
-@media (max-width: 700px) { .home-grid { grid-template-columns: minmax(0, 1fr); } }
-.home-item {
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-md); padding: 17px 19px;
-  transition: border-color .15s, box-shadow .15s, transform .15s;
-}
-.home-item:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
-}
-.home-item h3 { font-size: .89rem; margin-bottom: 6px; letter-spacing: -.01em; }
-.home-item p { font-size: .83rem; color: var(--muted); margin: 0; line-height: 1.72; }
 
 .feature-list { margin: 0; padding-left: 19px; }
 .feature-list li { margin-bottom: 7px; font-size: .89rem; color: var(--ink-2); }

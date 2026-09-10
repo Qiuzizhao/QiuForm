@@ -106,7 +106,8 @@ def upload_pages(apiid: str):
     if role not in db.PAGE_ROLES:
         role = ""
 
-    saved, rewritten_total, skipped, applied_role = [], 0, [], ""
+    saved, rewritten_total, skipped = [], 0, []
+    applied_role, applied_name, role_skipped = "", "", []
     for item in files:
         ext = Path(item.filename).suffix.lower()
         if ext not in storage.ASSET_EXT:
@@ -125,13 +126,19 @@ def upload_pages(apiid: str):
 
         name = storage.save_page_file(apiid, item.filename, data)
         # 所有文件都要登记，否则 css/js/图片这些配套资源访问不到
-        db.upsert_page(
-            apiid, name, item.filename, len(data),
-            role=role if storage.is_html(name) else "",
-        )
-        saved.append(name)
+        # 角色只给这次上传的第一个 HTML：一次传多个 HTML 时，
+        # 谁当学生端 / 教师端没法猜，剩下的可以在页面列表里单独设
+        file_role = ""
+        auto_student = True
         if role and storage.is_html(name):
-            applied_role = role
+            if not applied_role:
+                file_role, applied_role, applied_name = role, role, name
+            else:
+                role_skipped.append(name)
+                auto_student = False     # 别偷偷又塞给学生端
+        db.upsert_page(apiid, name, item.filename, len(data),
+                       role=file_role, auto_student=auto_student)
+        saved.append(name)
 
     if saved:
         if any(storage.is_html(n) for n in saved):
@@ -139,7 +146,12 @@ def upload_pages(apiid: str):
         else:
             flash(f"已上传 {len(saved)} 个配套资源。", "success")
         if applied_role:
-            flash(f"已把{db.PAGE_ROLES[applied_role]}指向新上传的页面。", "success")
+            flash(f"已把{db.PAGE_ROLES[applied_role]}指向 {applied_name}。", "success")
+        if role_skipped:
+            flash("这次一起传了多个 HTML，只有第一个设成了"
+                  f"{db.PAGE_ROLES[applied_role]}；"
+                  f"{'、'.join(role_skipped)} 可以在下面的列表里单独设。",
+                  "info")
         if rewritten_total:
             flash(f"顺手把页面里 {rewritten_total} 处接口地址改写成了本任务的地址。",
                   "info")

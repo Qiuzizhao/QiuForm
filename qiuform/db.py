@@ -298,7 +298,8 @@ def _apply_role(conn, apiid: str, filename: str, role: str) -> None:
 
 
 def upsert_page(apiid: str, filename: str, original_name: str, size: int,
-                make_primary: bool = False, role: str = "") -> None:
+                make_primary: bool = False, role: str = "",
+                auto_student: bool = True) -> None:
     conn = get_db()
     with conn:
         existing = conn.execute(
@@ -318,7 +319,7 @@ def upsert_page(apiid: str, filename: str, original_name: str, size: int,
             )
 
         wanted = role if role in PAGE_ROLES else ("student" if make_primary else "")
-        if not wanted and _is_html_name(filename):
+        if not wanted and auto_student and _is_html_name(filename):
             # 还没有学生端时，第一个上传的 HTML 自动顶上
             has_student = conn.execute(
                 "SELECT 1 FROM pages WHERE apiid = ? AND role = 'student' LIMIT 1",

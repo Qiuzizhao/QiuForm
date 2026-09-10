@@ -394,6 +394,21 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
           and "学生端".encode("utf-8") in svg and "教师端".encode("utf-8") in svg,
           f"status={status}")
 
+    # 一次传多个 HTML 时，角色只给第一个，不会互相抢
+    client.load_csrf(f"/tasks/{apiid}/pages")
+    status, html, _, _ = client.post(
+        f"/tasks/{apiid}/pages/upload",
+        {"csrf_token": client.csrf, "role": "teacher"},
+        files=[("files", "批量A.html", "text/html", b"<h1>A</h1>"),
+               ("files", "批量B.html", "text/html", b"<h1>B</h1>")])
+    check("一次传多个 HTML 时只有第一个拿到角色",
+          status == 200 and "批量A.html" in html and "只有第一个" in html,
+          html[:160])
+    status, text, _, _ = client.get(f"/p/{apiid}/")
+    check("批量上传没有把学生端挤掉",
+          status == 200 and "课堂反馈" in text and "A</h1>" not in text,
+          f"status={status}")
+
     # 配套资源
     client.load_csrf(f"/tasks/{apiid}/pages")
     status, html, _, _ = client.post(

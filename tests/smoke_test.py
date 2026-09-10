@@ -20,6 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import zlib
+from pathlib import Path
 
 BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000").rstrip("/")
 
@@ -169,6 +170,53 @@ def main():
 
     status, _, _, _ = client.get("/register")
     check("已登录再访问注册页会跳转", status == 200)
+
+    # ------------------------------------------------ 注册即送的样例任务
+    print("\n1b. 注册后默认带一份样例任务")
+    status, home, _, _ = client.get("/")
+    check("样例任务出现在我的任务里",
+          "多模态课堂互动 · 全流程测试样例" in home, home[:0])
+    sample_ids = re.findall(r"/tasks/([A-Za-z0-9]{12})", home)
+    sample = sample_ids[0] if sample_ids else ""
+    check("样例任务是独立任务（不是模板那个编号）",
+          bool(sample) and sample != "2ejeum6zp9k4", f"sample={sample}")
+
+    status, page_html, _, _ = client.get(f"/p/{sample}/")
+    check("样例学生端页面可以直接打开",
+          status == 200 and "多模态课堂互动" in page_html, f"status={status}")
+    check("样例页面里不残留模板任务的编号",
+          "2ejeum6zp9k4" not in page_html, "页面里还有模板编号")
+    check("样例页面用的是它自己的接口地址",
+          f"/api/{sample}" in page_html, f"期望 /api/{sample}")
+
+    # 记一下模板任务当前有多少条，写完样例再对比：两条数据不能混在一起
+    status, raw, _, _ = client.get("/api/2ejeum6zp9k4/all")
+    template_before = json.loads(raw)["total"] if status == 200 else None
+
+    status, raw, _, _ = client.raw(
+        "POST", f"/api/{sample}",
+        body=json.dumps({"姓名": "样例自测"}, ensure_ascii=False).encode("utf-8"),
+        headers={"Content-Type": "application/json"})
+    check("样例任务的接口能收数据", status == 200, f"status={status}")
+    status, raw, _, _ = client.get(f"/api/{sample}/all")
+    check("数据进了样例任务自己",
+          status == 200 and json.loads(raw)["total"] == 1, f"status={status}")
+    status, raw, _, _ = client.get("/api/2ejeum6zp9k4/all")
+    template_after = json.loads(raw)["total"] if status == 200 else None
+    check("模板任务的数据没被写进去",
+          template_before == template_after, f"{template_before} → {template_after}")
+
+    client.load_csrf(f"/tasks/{sample}/pages")
+    status, pages_html, _, _ = client.get(f"/tasks/{sample}/pages")
+    check("样例自带学生端和教师端两个角色",
+          "学生端" in pages_html and "教师端" in pages_html)
+
+    # 本地文件层面：模板的两份拷贝不能各改各的
+    root = Path(__file__).resolve().parent.parent
+    same = all(
+        (root / "demo" / name).read_bytes() == (root / "qiuform" / "seed" / name).read_bytes()
+        for name in ("学生端.html", "教师端.html"))
+    check("demo/ 与 qiuform/seed/ 的模板页保持一致", same)
 
     # 未登录访问受保护页面
     anon = Client()

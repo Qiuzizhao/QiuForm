@@ -2,10 +2,10 @@
 
 import re
 
-from flask import (Blueprint, flash, g, redirect, render_template, request,
-                   session, url_for)
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, session, url_for)
 
-from . import db, security
+from . import db, security, seed
 
 bp = Blueprint("auth", __name__)
 
@@ -47,7 +47,12 @@ def register():
             user_id = db.create_user(form["username"],
                                      security.hash_password(password))
             security.login_user({"id": user_id})
-            flash("账号创建好了，先去建一个任务吧。", "success")
+            flash("账号创建好了，先看看给你准备的样例任务吧。", "success")
+            # 每个新账号都拿到一份独立的样例任务（页面和接口都属于它自己）
+            try:
+                seed.create_sample_task(user_id)
+            except Exception:       # 样例只是锦上添花，不能因此让注册失败
+                current_app.logger.exception("生成样例任务失败")
             return redirect(_safe_next(request.args.get("next")) or url_for("tasks.index"))
 
     return render_template("auth/register.html", form=form)

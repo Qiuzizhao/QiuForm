@@ -106,11 +106,9 @@
           <div class="field" style="margin-top:14px">
             <label class="label" for="upload-role">上传后设为</label>
             <select class="input" id="upload-role" name="role">
-              <option value="">自动（还没有学生端时，第一个 HTML 当学生端）</option>
-              <option value="student">学生端（扫码打开的那个页面）</option>
-              <option value="teacher">教师端（看数据的那个页面）</option>
+              <option value="student">学生端</option>
+              <option value="teacher">教师端</option>
             </select>
-            <p class="hint">一个任务最多一个学生端、一个教师端，后面可以随时改。</p>
           </div>
 
           <button class="btn btn-primary btn-block" type="submit" style="margin-top:14px">
@@ -135,13 +133,6 @@
                 HTML 里指向 <span class="mono">/api/…</span> 的地址会自动换成
                 本任务的地址，而且改成相对路径 —— 换域名也不用重新改页面。
               </div>
-            </div>
-          </div>
-            <div class="icon-list-item">
-            <div class="icon-list-icon">{{ icon('home', 15) }}</div>
-            <div>
-              <div class="icon-list-title">自动设学生端</div>
-              <div class="icon-list-desc">还没有学生端时，第一个上传的 HTML 直接顶上。</div>
             </div>
           </div>
           <div class="icon-list-item">

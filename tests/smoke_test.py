@@ -287,6 +287,17 @@ def main():
     check("返回附件路径", len(urls) == 1 and urls[0].startswith("/files/"),
           f"{urls}")
 
+    # 中文字段名曾经被 latin-1 解成乱码，这里钉住
+    status, raw, _, _ = client.post(
+        f"/api/{apiid}", {"姓名": "林小满", "跟上程度": "完全跟上"},
+        files=[("图片", "作业.png", "image/png", png)])
+    check("中文字段名的 multipart 提交成功", status == 200, f"status={status}")
+    status, raw, _, _ = client.get(f"/api/{apiid}?limit=1")
+    last = (json.loads(raw).get("submissions") or [{}])[0]
+    check("中文字段名原样入库（不是乱码）",
+          last.get("姓名") == "林小满" and last.get("跟上程度") == "完全跟上",
+          f"keys={list(last.keys())}")
+
     if urls:
         status, blob, _, headers = client.raw("GET", urls[0])
         check("附件可公开访问", status == 200, f"status={status}")
@@ -366,7 +377,7 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
 
     status, blob, _, _ = client.raw("GET", f"/tasks/{apiid}/data.json")
     exported = json.loads(blob)
-    check("JSON 导出成功", status == 200 and exported["total"] == 7,
+    check("JSON 导出成功", status == 200 and exported["total"] == 8,
           f"status={status} total={exported.get('total')}")
 
     # ---------------------------------------------------------- 读写模式

@@ -15,14 +15,18 @@ def _param(header: str, key: str):
     return m.group(1).strip() if m else None
 
 
-def _fix_filename(name):
-    """浏览器可能按 UTF-8 发文件名，而我们用 latin-1 解了头，这里还原。"""
-    if name is None:
+def _fix_utf8(text):
+    """浏览器按 UTF-8 发头部的 name / filename，而我们用 latin-1 解了头，这里还原。
+
+    中文的字段名（name="姓名"）和文件名（filename="作业.png"）都要走这一步，
+    否则存进库的键会变成"å§å"这样的乱码。
+    """
+    if text is None:
         return None
     try:
-        return name.encode("latin-1").decode("utf-8")
+        return text.encode("latin-1").decode("utf-8")
     except (UnicodeEncodeError, UnicodeDecodeError):
-        return name
+        return text
 
 
 def boundary_of(content_type: str):
@@ -71,11 +75,11 @@ def parse(body: bytes, content_type: str):
                 )
 
         disposition = headers.get("content-disposition", "")
-        name = _param(disposition, "name")
+        name = _fix_utf8(_param(disposition, "name"))
         if name is None:
             continue
 
-        filename = _fix_filename(_param(disposition, "filename"))
+        filename = _fix_utf8(_param(disposition, "filename"))
         if filename is not None:
             files.append({
                 "field": name,

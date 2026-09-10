@@ -21,25 +21,13 @@
 </div>
 
 <div class="card" style="margin-bottom:16px">
-  <div class="card-head"><h2>{{ icon('user') }} 基本资料</h2></div>
+  <div class="card-head"><h2>{{ icon('user') }} 账号</h2></div>
   <div class="card-body">
-    <form method="post">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <input type="hidden" name="action" value="profile">
-      <div class="field">
-        <label class="label">用户名</label>
-        <input class="input" value="{{ user.username }}" disabled>
-        <p class="hint">用户名不能修改。</p>
-      </div>
-      <div class="field">
-        <label class="label" for="display_name">显示名称</label>
-        <input class="input" id="display_name" name="display_name"
-               value="{{ user.display_name }}" maxlength="40">
-      </div>
-      <button class="btn btn-primary" type="submit">
-        {{ icon('check', 15) }} 保存
-      </button>
-    </form>
+    <div class="spread">
+      <span class="muted small">用户名</span>
+      <span class="strong">{{ user.username }}</span>
+    </div>
+    <p class="hint">用户名就是登录名，不能修改。</p>
   </div>
 </div>
 

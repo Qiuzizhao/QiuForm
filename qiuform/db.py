@@ -10,6 +10,8 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT UNIQUE NOT NULL,
+    -- 早期版本有个"显示名称"，后来去掉了，这一列留着兼容旧数据，
+    -- 新建账号时统一填成用户名
     display_name  TEXT NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL,
     created_at    TEXT NOT NULL
@@ -123,13 +125,13 @@ def init_app(app):
 
 # ---------------------------------------------------------------- 账号
 
-def create_user(username: str, display_name: str, password_hash: str) -> int:
+def create_user(username: str, password_hash: str) -> int:
     conn = get_db()
     with conn:
         cur = conn.execute(
             "INSERT INTO users (username, display_name, password_hash, created_at)"
             " VALUES (?, ?, ?, ?)",
-            (username, display_name or username, password_hash, now()),
+            (username, username, password_hash, now()),
         )
     return cur.lastrowid
 
@@ -151,14 +153,6 @@ def update_user_password(user_id: int, password_hash: str):
     with conn:
         conn.execute(
             "UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id)
-        )
-
-
-def update_user_profile(user_id: int, display_name: str):
-    conn = get_db()
-    with conn:
-        conn.execute(
-            "UPDATE users SET display_name = ? WHERE id = ?", (display_name, user_id)
         )
 
 

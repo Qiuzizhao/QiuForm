@@ -26,7 +26,7 @@
           {{ icon('grid') }}<span class="nav-label">我的任务</span></a>
         <a class="nav-link {% if request.endpoint == 'auth.account' %}active{% endif %}"
            href="{{ url_for('auth.account') }}" title="账号设置">
-          {{ icon('user') }}<span class="nav-label">{{ current_user.display_name }}</span></a>
+          {{ icon('user') }}<span class="nav-label">{{ current_user.username }}</span></a>
         <span class="nav-sep"></span>
       {% else %}
         <a class="nav-link" href="{{ url_for('auth.login') }}">登录</a>

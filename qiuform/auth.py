@@ -25,10 +25,9 @@ def register():
     if g.user:
         return redirect(url_for("tasks.index"))
 
-    form = {"username": "", "display_name": ""}
+    form = {"username": ""}
     if request.method == "POST":
         form["username"] = (request.form.get("username") or "").strip()
-        form["display_name"] = (request.form.get("display_name") or "").strip()
         password = request.form.get("password") or ""
         confirm = request.form.get("confirm") or ""
 
@@ -45,10 +44,8 @@ def register():
         if error:
             flash(error, "error")
         else:
-            user_id = db.create_user(
-                form["username"], form["display_name"],
-                security.hash_password(password),
-            )
+            user_id = db.create_user(form["username"],
+                                     security.hash_password(password))
             security.login_user({"id": user_id})
             flash("账号创建好了，先去建一个任务吧。", "success")
             return redirect(_safe_next(request.args.get("next")) or url_for("tasks.index"))
@@ -88,12 +85,7 @@ def account():
     if request.method == "POST":
         action = request.form.get("action")
 
-        if action == "profile":
-            display_name = (request.form.get("display_name") or "").strip()
-            db.update_user_profile(g.user["id"], display_name or g.user["username"])
-            flash("资料已更新。", "success")
-
-        elif action == "password":
+        if action == "password":
             current = request.form.get("current") or ""
             new = request.form.get("new") or ""
             confirm = request.form.get("confirm") or ""

@@ -146,12 +146,11 @@ def main():
     check("注册页带 CSRF token", bool(client.csrf))
 
     status, html, url, _ = client.post_form("/register", {
-        "username": user, "display_name": "测试老师 1",
-        "password": password, "confirm": password,
+        "username": user, "password": password, "confirm": password,
     })
     check("注册成功并进入任务页", status == 200 and url.endswith("/"),
           f"status={status} url={url}")
-    check("页面上出现了用户名", "测试老师" in html)
+    check("导航里显示的是用户名", user in html)
 
     status, _, _, _ = client.get("/register")
     check("已登录再访问注册页会跳转", status == 200)
@@ -397,7 +396,6 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
     other = Client()
     other.load_csrf("/register")
     other.post_form("/register", {"username": f"other{stamp}",
-                                  "display_name": "别人",
                                   "password": password, "confirm": password})
     other.load_csrf("/")   # 登录会重置会话，CSRF 要重新取
     status, _, url, _ = other.get(f"/tasks/{apiid}")

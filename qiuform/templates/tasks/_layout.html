@@ -9,9 +9,9 @@
   <div class="task-title">
     <h1>{{ task.name }}</h1>
     <div class="task-meta muted small">
-      {% if task.description %}<span>{{ task.description }}</span>{% endif %}
+      {% if task.description %}<span class="task-desc">{{ task.description }}</span>{% endif %}
       <span class="mono tiny">{{ task.apiid }}</span>
-      <span class="tiny">创建于 {{ task.created_at }}</span>
+      <span class="tiny task-time">创建于 {{ task.created_at }}</span>
     </div>
   </div>
   <div class="row tight">

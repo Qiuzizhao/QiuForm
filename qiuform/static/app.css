@@ -489,7 +489,7 @@ code, pre, .mono {
   padding: 12px; line-height: 0; box-shadow: var(--shadow-xs); flex: none;
 }
 .qr-frame svg { width: 150px; height: 150px; display: block; }
-@media (max-width: 420px) {
+@media (max-width: 360px) {
   .qr-pair { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -769,4 +769,61 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   display: inline-block; width: 7px; height: 7px; border-radius: 50%;
   background: var(--good);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 20%, transparent);
+}
+
+/* ============================================================== 手机端
+   这一块专门处理"在手机上用"的细节：iOS 聚焦不放大、手指点得中、
+   任务页顶部不占掉半屏、二维码在窄屏也并排。
+   ============================================================== */
+
+@media (max-width: 640px) {
+  :root { --nav-h: 54px; }
+
+  /* iOS 上输入框字号小于 16px，聚焦时会把整页放大 */
+  .input, .textarea, .select, input, select, textarea { font-size: 16px; }
+  .input, .select { padding: 11px 13px; }
+
+  /* 手指点得着的按钮 */
+  .btn { min-height: 42px; padding: 11px 16px; }
+  .btn-sm { min-height: 38px; padding: 8px 12px; font-size: .82rem; }
+  .nav-link, .linkish { min-width: 44px; min-height: 44px; justify-content: center; }
+  .tab { padding: 12px 14px; }
+
+  /* 登录、注册页的表单往上提一点 */
+  .page.narrow { padding-top: 30px; }
+
+  /* 任务头部：简介收成一行，创建时间让位给正文 */
+  .task-head { gap: 10px; }
+  .task-title h1 { font-size: 1.24rem; margin-bottom: 4px; }
+  .task-meta { font-size: .78rem; gap: 2px 8px; }
+  .task-desc {
+    display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .task-time { display: none; }
+  .tabs { margin: 16px 0 14px; }
+
+  /* 统计卡改成横排的一行，三张卡不再各占半屏 */
+  .stats { gap: 9px; }
+  .stat {
+    display: flex; align-items: baseline; gap: 9px;
+    padding: 12px 15px;
+  }
+  .stat-num { font-size: 1.45rem; }
+  .stat-num.small { font-size: .88rem; }
+  .stat-label { margin-top: 0; font-size: .8rem; }
+  .stat-icon { top: 10px; right: 12px; opacity: .32; }
+
+  /* 两个二维码在 375 宽的手机上也左右排 */
+  .qr-pair { gap: 10px; }
+  .qr-item figcaption { font-size: .76rem; margin-top: 6px; }
+  .copybox .value { font-size: .76rem; }
+
+  /* 提交记录里的字段行 */
+  .kv { font-size: .82rem; }
+  .filechip { max-width: 60vw; }
+
+  /* 底部留出 iPhone 的横条位置 */
+  .page { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  .empty { padding: 34px 18px; }
 }

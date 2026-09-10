@@ -149,6 +149,10 @@ def main():
     check("静态资源地址带版本号（更新后不会用到旧缓存）",
           "app.css?v=" in landing and "app.js?v=" in landing)
 
+    # 手机端：刘海屏要留安全区，viewport 得带上 viewport-fit=cover
+    check("viewport 带 viewport-fit=cover",
+          "viewport-fit=cover" in landing, landing[:0])
+
     check("登录 / 注册的密码框都有「小眼睛」",
           html.count("data-pw-toggle") == 2,        # 注册页：密码 + 确认密码
           f"注册页找到 {html.count('data-pw-toggle')} 个")

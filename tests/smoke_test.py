@@ -456,6 +456,9 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
           and svg.count(b"<rect") > 100
           and "学生端".encode("utf-8") in svg and "教师端".encode("utf-8") in svg,
           f"status={status}")
+    # 两个地址长度不同 → 二维码版本不同 → 必须缩放成一样大
+    check("下载的两个二维码大小一致（小的会被缩放到同一外框）",
+          b"<svg x=" in svg, "没有找到缩放用的嵌套 svg")
 
     # 一次传多个 HTML 时，角色只给第一个，不会互相抢
     client.load_csrf(f"/tasks/{apiid}/pages")

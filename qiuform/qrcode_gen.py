@@ -448,6 +448,8 @@ def render_pair_svg(items, *, scale: int = 6, gap: int = 56, margin: int = 26,
         )
         blocks.append((px, rects, label))
 
+    # 两个二维码的模块数通常不一样（地址越长版本越高），
+    # 统一外框、各自缩放到同一个尺寸，看起来才一样大。
     qr_w = max(b[0] for b in blocks)
     font = label_size or max(18, int(qr_w * 0.12))
     label_h = font + 6
@@ -458,12 +460,16 @@ def render_pair_svg(items, *, scale: int = 6, gap: int = 56, margin: int = 26,
                    '"Segoe UI", sans-serif')
     parts = []
     for i, (px, rects, label) in enumerate(blocks):
-        x = margin + i * (qr_w + gap) + (qr_w - px) / 2
+        x = margin + i * (qr_w + gap)
         y = margin
-        parts.append(f'<g transform="translate({x:g} {y:g})">'
-                     f'<g fill="{html.escape(dark)}">{rects}</g></g>')
+        # 每个码都塞进同样大的外框：地址长度不同会导致二维码版本不同，
+        # 这里统一缩放到同一尺寸（矢量缩放，打印也不糊）。
         parts.append(
-            f'<text x="{x + px / 2:g}" y="{y + qr_w + label_gap + font:g}"'
+            f'<svg x="{x:g}" y="{y:g}" width="{qr_w}" height="{qr_w}"'
+            f' viewBox="0 0 {px} {px}">'
+            f'<g fill="{html.escape(dark)}">{rects}</g></svg>')
+        parts.append(
+            f'<text x="{x + qr_w / 2:g}" y="{y + qr_w + label_gap + font:g}"'
             f' text-anchor="middle" font-size="{font}" fill="#12161f"'
             f' font-family="{html.escape(font_family, quote=True)}">'
             f'{html.escape(label)}</text>'

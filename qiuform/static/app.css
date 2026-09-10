@@ -602,43 +602,26 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 
 /* ------------------------------------------------------------ 首页 */
 
-.hero { padding: 40px 0 34px; text-align: center; }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: .78rem; font-weight: 600; color: var(--accent);
-  background: var(--accent-soft); border: 1px solid var(--accent-line);
-  border-radius: var(--r-full); padding: 5px 13px; margin-bottom: 20px;
+/* 自用为主，首页不做宣传，就是一个安静入口 */
+.home-page { max-width: 620px; }
+.home { padding: 54px 0 40px; }
+.home-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.home-brand h1 { font-size: 1.45rem; letter-spacing: -.02em; }
+.home-lede {
+  color: var(--muted); font-size: 1rem; line-height: 1.8; margin-bottom: 24px;
 }
-.hero h1 {
-  font-size: clamp(1.9rem, 5vw, 2.9rem);
-  letter-spacing: -.035em; line-height: 1.15; margin-bottom: 16px;
-}
-.hero .lead {
-  font-size: 1.05rem; color: var(--muted); max-width: 60ch;
-  margin: 0 auto 26px; line-height: 1.7;
-}
-.hero-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.home-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 38px; }
+.home-note { border-top: 1px solid var(--line); padding-top: 26px; }
+.home-note h2 { font-size: .92rem; margin-bottom: 10px; }
+.home-note p { margin-bottom: 12px; }
 
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-@media (max-width: 860px) { .steps { grid-template-columns: minmax(0, 1fr); } }
-.step { padding: 22px; }
-.step-num {
-  width: 30px; height: 30px; border-radius: var(--r-sm);
-  background: var(--accent-soft); color: var(--accent);
-  border: 1px solid var(--accent-line);
-  font-size: .82rem; font-weight: 700;
-  display: grid; place-items: center; margin-bottom: 13px;
-}
+.quiet-list { margin: 0; padding-left: 18px; color: var(--ink-2); }
+.quiet-list li { margin-bottom: 6px; }
+.quiet-list li::marker { color: var(--faint); }
 
 .feature-list { margin: 0; padding-left: 19px; }
 .feature-list li { margin-bottom: 7px; font-size: .89rem; color: var(--ink-2); }
 .feature-list li::marker { color: var(--faint); }
-
-.kbd {
-  background: var(--surface); border: 1px solid var(--line-strong);
-  border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px;
-  font-size: .79rem; font-family: ui-monospace, Consolas, monospace;
-}
 
 /* 图标说明列表 */
 .icon-list { display: flex; flex-direction: column; gap: 13px; }

@@ -1,115 +1,43 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
-{% block title %}{{ SITE_NAME }} · 让网页收得到数据{% endblock %}
+{% block title %}{{ SITE_NAME }}{% endblock %}
+{% block page_class %}home-page{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <span class="hero-badge">{{ icon('sparkles', 14) }} 为大模型生成的网页而生</span>
-  <h1>让网页收得到数据</h1>
-  <p class="lead">
-    大模型几秒钟就能写出一张漂亮的互动网页，可学生填完就没了。
-    QiuForm 给每个任务一个接口地址 —— 任何网页把数据 POST 过来，
-    都会汇总到同一个后台，能看、能导出、能实时展示。
+<section class="home">
+  <div class="home-brand">
+    <span class="brand-mark">Q</span>
+    <h1>{{ SITE_NAME }}</h1>
+  </div>
+
+  <p class="home-lede">
+    一个任务一个接口地址。任何网页把数据 POST 过来，都会汇总到同一个后台，
+    可以查看、导出。
   </p>
-  <div class="hero-actions">
-    <a class="btn btn-lg btn-primary" href="{{ url_for('auth.register') }}">
-      {{ icon('arrow-right', 17) }} 免费开始
-    </a>
-    <a class="btn btn-lg" href="{{ url_for('auth.login') }}">已有账号，登录</a>
+
+  <div class="home-actions">
+    <a class="btn btn-primary" href="{{ url_for('auth.login') }}">登录</a>
+    <a class="btn" href="{{ url_for('auth.register') }}">注册</a>
+  </div>
+
+  <div class="home-note">
+    <h2>能收的不只是表格</h2>
+    <p class="small muted">
+      字段不用提前定义，网页里拿得到什么就能存什么。所以除了填写的内容，
+      这些也都能一起收上来：
+    </p>
+    <ul class="quiet-list small">
+      <li>交互过程 —— 每一步点了哪里、按了什么顺序</li>
+      <li>用时与反应时间 —— 每道题、每一轮分别花了多久</li>
+      <li>对错与尝试次数 —— 答对几次、错几次、改过几次</li>
+      <li>是否看过提示 —— 看了几次、看的是哪一条</li>
+      <li>动画或小游戏里的操作记录、得分、中途退出</li>
+      <li>图片、音频、PDF 等文件</li>
+    </ul>
+    <p class="small muted" style="margin-top:14px">
+      一个页面把数据 POST 到 <span class="mono">{{ base_url() }}/api/&lt;任务编号&gt;</span> 就行，
+      不需要注册、不需要密钥。
+    </p>
   </div>
 </section>
-
-<div class="steps">
-  <div class="card step">
-    <div class="step-num">1</div>
-    <h3>建一个任务</h3>
-    <p class="muted small" style="margin-top:7px">
-      起个名字，系统立刻给你一个专属接口地址。这个地址就是数据的入口。
-    </p>
-  </div>
-  <div class="card step">
-    <div class="step-num">2</div>
-    <h3>把地址交给网页</h3>
-    <p class="muted small" style="margin-top:7px">
-      在提示词里写一句「请把数据 POST 到 /api/…」，
-      或者直接把你做好的 HTML 传上来托管。
-    </p>
-  </div>
-  <div class="card step">
-    <div class="step-num">3</div>
-    <h3>看数据、导出、上大屏</h3>
-    <p class="muted small" style="margin-top:7px">
-      提交记录实时汇总，可查可导出；再做一个页面读同一个地址，
-      就是一块实时数据大屏。
-    </p>
-  </div>
-</div>
-
-<div class="grid two section-gap">
-  <div class="card">
-    <div class="card-head"><h2>{{ icon('sparkles') }} 和现成的问卷工具差在哪</h2></div>
-    <div class="card-body">
-      <div class="icon-list">
-        <div class="icon-list-item">
-          <div class="icon-list-icon">{{ icon('link', 16) }}</div>
-          <div>
-            <div class="icon-list-title">不挑前端</div>
-            <div class="icon-list-desc">
-              手写的、AI 生成的、别人做好的页面，改一行地址就能接上。
-            </div>
-          </div>
-        </div>
-        <div class="icon-list-item">
-          <div class="icon-list-icon">{{ icon('table', 16) }}</div>
-          <div>
-            <div class="icon-list-title">不预设字段</div>
-            <div class="icon-list-desc">
-              不用先设计表结构，提交什么就存什么，表格列自动长出来。
-            </div>
-          </div>
-        </div>
-        <div class="icon-list-item">
-          <div class="icon-list-icon">{{ icon('eye', 16) }}</div>
-          <div>
-            <div class="icon-list-title">同一个地址还能读</div>
-            <div class="icon-list-desc">
-              写完就能读回来，实时统计、留言墙、数据大屏都靠它。
-            </div>
-          </div>
-        </div>
-        <div class="icon-list-item">
-          <div class="icon-list-icon">{{ icon('image', 16) }}</div>
-          <div>
-            <div class="icon-list-title">能一起收文件</div>
-            <div class="icon-list-desc">
-              图片、PDF 直接上传，后台存路径，页面里就能显示出来。
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-head"><h2>{{ icon('copy') }} 一次请求就懂了</h2></div>
-    <div class="card-body">
-      <pre class="code">curl -X POST {{ base_url() }}/api/你的任务编号 \
-  -H "Content-Type: application/json" \
-  -d '{"姓名":"张三","掌握程度":"完全掌握"}'</pre>
-      <p class="hint" style="margin-top:12px">
-        不挑技术栈，也几乎没有格式要求 —— 这正是它能在课堂上跑起来的原因。
-      </p>
-      <div class="divider"></div>
-      <div class="row tight">
-        <span class="chip chip-read_write">可读可写</span>
-        <span class="chip chip-read_only">只读</span>
-        <span class="chip chip-write_only">只写</span>
-        <span class="chip chip-closed">已关闭</span>
-      </div>
-      <p class="hint" style="margin-top:8px">
-        一个任务可以随时在这四种读写模式之间切换，问卷和展示都能用。
-      </p>
-    </div>
-  </div>
-</div>
 {% endblock %}

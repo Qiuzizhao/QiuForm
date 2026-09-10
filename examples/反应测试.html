@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>反应力小测试</title>
+<style>
+  :root { --ink: #16181f; --muted: #6b7280; --line: #e5e7eb; --brand: #3b5bfd;
+          --red: #e5484d; --blue: #3b82f6; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 20px;
+    background: #f4f5f9; color: var(--ink);
+    font: 16px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .card {
+    width: min(560px, 100%); background: #fff; border: 1px solid var(--line);
+    border-radius: 16px; padding: 26px;
+    box-shadow: 0 18px 40px -24px rgba(20, 24, 40, .35);
+  }
+  h1 { font-size: 1.3rem; margin: 0 0 6px; }
+  .sub { color: var(--muted); font-size: .9rem; margin: 0 0 20px; }
+  .sub b.blue { color: var(--blue); }
+  .sub b.red { color: var(--red); }
+  label.field { display: block; font-size: .87rem; font-weight: 600; margin-bottom: 16px; }
+  input {
+    width: 100%; font: inherit; font-size: .95rem; margin-top: 6px;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  }
+  input:focus { outline: 2px solid #cdd8ff; border-color: var(--brand); }
+  button {
+    font: inherit; font-size: 1rem; font-weight: 600;
+    padding: 12px 20px; border: 0; border-radius: 10px;
+    background: var(--brand); color: #fff; cursor: pointer;
+  }
+  button:hover { background: #2c47d6; }
+  button.ghost { background: transparent; color: var(--brand); border: 1px solid #c9d4ff; }
+  button.ghost:hover { background: #eef2ff; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .bar {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: .82rem; color: var(--muted); margin-bottom: 10px;
+  }
+  .arena {
+    position: relative; height: 280px; border-radius: 12px;
+    background: #fbfcff; border: 1px solid var(--line); overflow: hidden;
+    cursor: pointer; user-select: none;
+  }
+  .arena .msg {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    color: var(--muted); font-size: .95rem; pointer-events: none;
+  }
+  .target {
+    position: absolute; width: 62px; height: 62px; border-radius: 50%;
+    display: none; box-shadow: 0 6px 18px -6px rgba(0, 0, 0, .4);
+  }
+  .target.blue { background: var(--blue); }
+  .target.red  { background: var(--red); }
+  .flash {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-weight: 700; font-size: 1.1rem; pointer-events: none;
+    animation: pop .45s ease-out both;
+  }
+  .flash.ok  { color: #0a7247; background: #e8f7f0aa; }
+  .flash.bad { color: #a52a2a; background: #fdeeeeaa; }
+  @keyframes pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; } }
+  .result { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+  .result b { font-size: 1.15rem; display: block; }
+  .result span { color: var(--muted); font-size: .82rem; }
+  .msg2 { margin-top: 14px; font-size: .9rem; padding: 10px 13px; border-radius: 9px; }
+  .msg2.ok  { background: #e8f7f0; color: #0a7247; }
+  .msg2.err { background: #fdeeee; color: #a52a2a; }
+  details { margin-top: 18px; font-size: .87rem; }
+  details summary { cursor: pointer; color: var(--muted); }
+  details ul { margin: 8px 0 0; padding-left: 18px; color: #4b5563; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>反应力小测试</h1>
+  <p class="sub">看到<b class="blue">蓝点</b>就快点它；看到<b class="red">红点</b>千万别点。</p>
+
+  <div id="intro">
+    <label class="field">你的名字（可空）
+      <input id="name" placeholder="例：张三" autocomplete="off">
+    </label>
+    <div class="actions">
+      <button id="start" type="button">开始测试</button>
+      <button class="ghost" id="hintBtn" type="button">看看规则</button>
+    </div>
+    <details id="hint" hidden>
+      <summary>规则</summary>
+      <ul>
+        <li>一共 6 轮，每轮随机等一小会儿后出现一个圆点。</li>
+        <li>蓝点：尽快点它，记录你的反应时间。</li>
+        <li>红点：不能点，点了算一次失误。</li>
+        <li>蓝点出现 1.2 秒内没点，算一次漏掉。</li>
+        <li>圆点还没出现就乱点，算一次抢跑。</li>
+      </ul>
+    </details>
+  </div>
+
+  <div id="stage" hidden>
+    <div class="bar">
+      <span id="progress">第 1 / 6 轮</span>
+      <span id="live"></span>
+    </div>
+    <div class="arena" id="arena">
+      <div class="msg" id="arenaMsg">准备…</div>
+      <div class="target" id="target"></div>
+    </div>
+  </div>
+
+  <div id="done" hidden>
+    <h1 style="font-size:1.1rem;margin-bottom:14px">测试结束</h1>
+    <div class="result" id="result"></div>
+    <div id="status"></div>
+    <div class="actions" style="margin-top:18px">
+      <button class="ghost" id="again" type="button">再来一次</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 接口地址。上传到 QiuForm 后，这个占位符会被自动改写成本任务的真实地址。
+  var ENDPOINT = "/api/YOUR_TASK_ID_HERE";
+
+  var ROUNDS = 6;          // 总轮数
+  var TRAP_RATIO = 0.34;   // 出现"红点陷阱"的概率
+  var TIMEOUT_MS = 1200;   // 圆点出现后多久没反应算漏掉 / 算忍住
+
+  function el(id) { return document.getElementById(id); }
+  var arena = el('arena'), target = el('target'), arenaMsg = el('arenaMsg');
+  var intro = el('intro'), stage = el('stage'), done = el('done');
+  // 注意：别把变量叫 status —— window.status 是浏览器的内置字符串属性，
+  // 顶层的 var status = ... 会被强行转成字符串，后面所有赋值都静默失效。
+  var hint = el('hint'), statusBox = el('status');
+
+  var state = null;
+  var hintOpened = false;
+
+  function freshState() {
+    return {
+      round: 0,
+      results: [],      // 每轮结果：正确 / 失误 / 漏掉
+      times: [],        // 每轮反应时间（毫秒），没点的记 0
+      falseStarts: 0,   // 还没出现就乱点
+      hintViews: 0,
+      startedAt: 0,
+      phase: 'idle',    // idle | waiting | showing
+      shownAt: 0,
+      isTrap: false,
+      timer: 0
+    };
+  }
+
+  function show(node, visible) { node.hidden = !visible; }
+
+  // ---------------------------------------------------------------- 规则
+  el('hintBtn').addEventListener('click', function () {
+    if (!state) state = freshState();
+    state.hintViews++;
+    hintOpened = true;
+    show(hint, true);
+    hint.open = true;
+  });
+
+  // ---------------------------------------------------------------- 开始
+  el('start').addEventListener('click', start);
+  el('again').addEventListener('click', start);
+
+  function start() {
+    state = freshState();
+    state.hintViews = hintOpened ? 1 : 0;
+    state.startedAt = performance.now();
+    hintOpened = false;
+
+    show(intro, false);
+    show(done, false);
+    show(stage, true);
+    statusBox.className = '';
+    statusBox.textContent = '';
+    nextRound();
+  }
+
+  function nextRound() {
+    state.round++;
+    if (state.round > ROUNDS) return finish();
+
+    el('progress').textContent = '第 ' + state.round + ' / ' + ROUNDS + ' 轮';
+    el('live').textContent = state.falseStarts ? '抢跑了 ' + state.falseStarts + ' 次' : '';
+    arenaMsg.textContent = '准备…';
+    target.style.display = 'none';
+    target.className = 'target';
+    state.phase = 'waiting';
+
+    // 随机等 0.8 ~ 2.2 秒，避免靠节奏预判
+    setTimeout(showTarget, 800 + Math.random() * 1400);
+  }
+
+  function showTarget() {
+    if (state.phase !== 'waiting') return;
+    state.phase = 'showing';
+    arenaMsg.textContent = '';
+
+    state.isTrap = Math.random() < TRAP_RATIO;
+    target.className = 'target ' + (state.isTrap ? 'red' : 'blue');
+
+    var box = arena.getBoundingClientRect();
+    var size = 62;
+    target.style.left = Math.round(10 + Math.random() * (box.width - size - 20)) + 'px';
+    target.style.top = Math.round(10 + Math.random() * (box.height - size - 20)) + 'px';
+    target.style.display = 'block';
+
+    state.shownAt = performance.now();
+    // 蓝点超时算漏掉；红点忍住了算正确
+    state.timer = setTimeout(function () {
+      resolveRound(state.isTrap ? '正确' : '漏掉', 0);
+    }, TIMEOUT_MS);
+  }
+
+  // ---------------------------------------------------------------- 点击
+  target.addEventListener('click', function (event) {
+    event.stopPropagation();
+    if (state.phase !== 'showing') return;
+    var rt = Math.round(performance.now() - state.shownAt);
+    resolveRound(state.isTrap ? '失误' : '正确', rt);
+  });
+
+  arena.addEventListener('click', function () {
+    if (state && state.phase === 'waiting') {
+      state.falseStarts++;
+      el('live').textContent = '抢跑了 ' + state.falseStarts + ' 次';
+    }
+  });
+
+  function resolveRound(outcome, rt) {
+    clearTimeout(state.timer);
+    state.phase = 'idle';
+    state.results.push(outcome);
+    state.times.push(rt);
+    target.style.display = 'none';
+
+    var flash = document.createElement('div');
+    flash.className = 'flash ' + (outcome === '正确' ? 'ok' : 'bad');
+    flash.textContent = outcome === '正确'
+      ? (rt ? '正确　' + rt + ' ms' : '忍住了')
+      : outcome;
+    arena.appendChild(flash);
+    setTimeout(function () { flash.remove(); }, 450);
+    setTimeout(nextRound, 560);
+  }
+
+  // ---------------------------------------------------------------- 结算
+  function finish() {
+    show(stage, false);
+    show(done, true);
+
+    var hits = state.times.filter(function (t) { return t > 0; });
+    function count(name) {
+      return state.results.filter(function (r) { return r === name; }).length;
+    }
+    var correct = count('正确');
+    var wrong = count('失误');
+    var missed = count('漏掉');
+    var avg = hits.length
+      ? Math.round(hits.reduce(function (a, b) { return a + b; }, 0) / hits.length) : 0;
+    var fastest = hits.length ? Math.min.apply(null, hits) : 0;
+    var slowest = hits.length ? Math.max.apply(null, hits) : 0;
+    var totalSec = Math.round((performance.now() - state.startedAt) / 100) / 10;
+
+    el('result').innerHTML =
+      '<div><b>' + avg + ' ms</b><span>平均反应时间</span></div>' +
+      '<div><b>' + fastest + ' ms</b><span>最快</span></div>' +
+      '<div><b>' + slowest + ' ms</b><span>最慢</span></div>' +
+      '<div><b>' + correct + ' / ' + ROUNDS + '</b><span>正确</span></div>' +
+      '<div><b>' + wrong + ' 次</b><span>失误</span></div>' +
+      '<div><b>' + missed + ' 次</b><span>漏掉</span></div>' +
+      '<div><b>' + state.falseStarts + ' 次</b><span>抢跑</span></div>' +
+      '<div><b>' + state.hintViews + ' 次</b><span>看规则</span></div>';
+
+    // 这些细节正是问卷收不到的：逐轮时间、逐轮结果、抢跑、看没看规则
+    var payload = {
+      '姓名': (el('name').value || '').trim() || '匿名',
+      '平均反应时间ms': avg,
+      '最快反应ms': fastest,
+      '最慢反应ms': slowest,
+      '正确次数': correct,
+      '失误次数': wrong,
+      '漏掉次数': missed,
+      '抢跑次数': state.falseStarts,
+      '查看规则次数': state.hintViews,
+      '各轮反应时间ms': state.times,
+      '各轮结果': state.results,
+      '总用时秒': totalSec,
+      '设备': window.innerWidth < 600 ? '手机' : '电脑'
+    };
+
+    statusBox.className = 'msg2';
+    statusBox.textContent = '提交中…';
+
+    fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (response) {
+      return response.json().then(function (data) { return [response, data]; });
+    }).then(function (pair) {
+      var response = pair[0], data = pair[1];
+      if (response.ok && data.ok) {
+        statusBox.className = 'msg2 ok';
+        statusBox.textContent = '成绩已提交，谢谢！';
+      } else {
+        statusBox.className = 'msg2 err';
+        statusBox.textContent = '提交失败：' + (data.message || response.status);
+      }
+    }).catch(function (err) {
+      statusBox.className = 'msg2 err';
+      statusBox.textContent = '提交失败：' + err.message;
+    });
+  }
+</script>
+</body>
+</html>

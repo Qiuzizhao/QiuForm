@@ -634,14 +634,9 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 .lp-section { margin-bottom: 88px; }
 .lp-section-last { margin-bottom: 0; }
 .lp-head { text-align: center; margin-bottom: 34px; }
-.lp-eyebrow {
-  display: inline-block; margin-bottom: 12px;
-  font-size: .72rem; font-weight: 700; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--accent);
-}
 .lp-head h2 {
   font-size: clamp(1.3rem, 3vw, 1.7rem);
-  letter-spacing: -.028em; margin-bottom: 10px;
+  letter-spacing: -.028em; margin: 0;
 }
 .lp-head p { font-size: .95rem; color: var(--muted); max-width: 44ch; margin: 0 auto; }
 

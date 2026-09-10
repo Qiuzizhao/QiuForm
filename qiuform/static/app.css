@@ -509,6 +509,35 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+
+/* 图片放大浮层 */
+.lightbox {
+  position: fixed; inset: 0; z-index: 90;
+  display: grid; place-items: center; padding: 34px 24px 54px;
+  background: rgba(11, 15, 25, .88);
+  animation: lb-in .16s ease-out both;
+}
+.lightbox[hidden] { display: none; }
+@keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
+.lightbox img {
+  max-width: min(94vw, 1400px); max-height: calc(100vh - 108px);
+  border-radius: 12px; background: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
+  image-rendering: auto;
+}
+.lightbox-close {
+  position: fixed; top: 18px; right: 20px;
+  width: 40px; height: 40px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center;
+  font-size: 17px; line-height: 1; color: #fff; cursor: pointer;
+  background: rgba(255, 255, 255, .16); border: 0;
+  transition: background .13s;
+}
+.lightbox-close:hover { background: rgba(255, 255, 255, .3); }
+.lightbox-hint {
+  position: fixed; left: 0; right: 0; bottom: 18px; text-align: center;
+  color: rgba(255, 255, 255, .58); font-size: .76rem; pointer-events: none;
+}
 .filechip:hover { background: var(--accent-soft); border-color: var(--accent-line); text-decoration: none; }
 
 /* ------------------------------------------------------------ 拖放上传 */

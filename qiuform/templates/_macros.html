@@ -2,7 +2,7 @@
   {%- set name = url.rsplit('/', 1)[-1] -%}
   {%- set ext = name.rsplit('.', 1)[-1] | lower if '.' in name else '' -%}
   {%- if ext in ['jpg','jpeg','png','gif','webp','bmp','svg','avif','ico'] -%}
-    <a href="{{ url }}" target="_blank" title="{{ name }}">
+    <a href="{{ url }}" data-lightbox title="{{ name }}（点击放大）">
       <img class="thumb" src="{{ url }}" alt="{{ name }}" loading="lazy"></a>
   {%- else -%}
     <a class="filechip" href="{{ url }}" target="_blank">📎 {{ name }}</a>

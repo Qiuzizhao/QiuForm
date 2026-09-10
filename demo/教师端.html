@@ -121,6 +121,27 @@
   .state.err { border-color: #f2c9c9; background: #fdf4f4; color: #b72828; }
   .foot { color: var(--muted); font-size: 12.5px; text-align: center; margin: 26px 0 50px; }
   .foot code { background: #eef0f6; padding: 2px 6px; border-radius: 6px; }
+  /* 图片放大浮层：点缩略图弹出，× / 背景 / ESC 关闭 */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 90; display: grid; place-items: center;
+    padding: 34px 24px 54px; background: rgba(11, 15, 25, .88);
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox img {
+    max-width: min(94vw, 1400px); max-height: calc(100vh - 108px);
+    border-radius: 12px; background: #fff; box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .lightbox-close {
+    position: fixed; top: 18px; right: 20px; width: 40px; height: 40px;
+    border-radius: 50%; padding: 0; display: grid; place-items: center;
+    font-size: 17px; line-height: 1; color: #fff; cursor: pointer;
+    background: rgba(255,255,255,.16); border: 0;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,.3); }
+  .lightbox-hint {
+    position: fixed; left: 0; right: 0; bottom: 18px; text-align: center;
+    color: rgba(255,255,255,.58); font-size: 12px; pointer-events: none;
+  }
   @media (max-width: 900px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
     .cols { grid-template-columns: 1fr; }
@@ -186,6 +207,12 @@
 
   <p class="foot">数据来自 <code id="api-url"></code> · 页面每 5 秒自动刷新一次</p>
 </main>
+
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="图片预览">
+  <button class="lightbox-close" type="button" id="lightbox-close" title="关闭（ESC）">✕</button>
+  <img id="lightbox-img" alt="">
+  <div class="lightbox-hint">点背景、按 ESC 或右上角 ✕ 关闭</div>
+</div>
 
 <script>
 (function () {
@@ -424,7 +451,9 @@
           var fig = document.createElement("figure");
           var a = document.createElement("a");
           a.href = BASE + p;
-          a.target = "_blank";
+          a.setAttribute("data-lightbox", "");
+          a.title = "点击放大";
+          a.style.cursor = "zoom-in";
           var img = document.createElement("img");
           img.src = BASE + p;
           img.alt = p;
@@ -508,6 +537,37 @@
 
   el("refresh-btn").addEventListener("click", function () { load(); });
   el("auto-btn").addEventListener("click", function () { setAuto(!auto); });
+
+  /* -------------------------------------------------------- 图片浮层 */
+
+  var lightbox = el("lightbox");
+  var lightboxImg = el("lightbox-img");
+
+  function closeLightbox() {
+    if (lightbox.hidden) return;
+    lightbox.hidden = true;
+    lightboxImg.removeAttribute("src");
+    document.body.style.overflow = "";
+  }
+
+  document.addEventListener("click", function (event) {
+    var link = event.target.closest("a[data-lightbox]");
+    if (link) {
+      event.preventDefault();
+      lightboxImg.src = link.getAttribute("href");
+      lightbox.hidden = false;
+      document.body.style.overflow = "hidden";
+      el("lightbox-close").focus();
+      return;
+    }
+    if (!lightbox.hidden &&
+        (event.target === lightbox || event.target.closest("#lightbox-close"))) {
+      closeLightbox();
+    }
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeLightbox();
+  });
 
   function setAuto(on) {
     auto = on;

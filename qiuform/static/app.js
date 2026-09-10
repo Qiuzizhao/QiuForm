@@ -74,6 +74,47 @@
 
   /* ---------------------------------------------------------- 拖放上传 */
 
+  /* ------------------------------------------------------ 图片放大浮层 */
+
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightbox-img');
+
+  function closeLightbox() {
+    if (!lightbox || lightbox.hidden) return;
+    lightbox.hidden = true;
+    lightboxImg.removeAttribute('src');
+    document.body.style.overflow = '';
+  }
+
+  function openLightbox(src, alt) {
+    if (!lightbox) return;
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    lightbox.hidden = false;
+    document.body.style.overflow = 'hidden';
+    var close = document.getElementById('lightbox-close');
+    if (close) close.focus();
+  }
+
+  document.addEventListener('click', function (event) {
+    var link = event.target.closest('a[data-lightbox]');
+    if (link) {
+      event.preventDefault();
+      openLightbox(link.getAttribute('href'),
+                   link.querySelector('img') ? link.querySelector('img').alt : '');
+      return;
+    }
+    // 点背景或关闭按钮
+    if (lightbox && !lightbox.hidden &&
+        (event.target === lightbox || event.target.closest('#lightbox-close'))) {
+      closeLightbox();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeLightbox();
+  });
+
   document.querySelectorAll('[data-drop]').forEach(function (zone) {
     var input = zone.querySelector('input[type=file]');
     var counter = zone.querySelector('[data-drop-count]');

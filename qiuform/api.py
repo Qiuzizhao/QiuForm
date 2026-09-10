@@ -20,7 +20,12 @@ from .urls import base_url
 
 bp = Blueprint("api", __name__, url_prefix="/api")
 
-_read_gate: dict = {}
+# 读取限流：按 (任务, 客户端) 记令牌桶。
+#
+# 为什么不用"最小间隔"：一个班的学生走学校同一个出口 IP，最小间隔会让
+# 第二个人打开看板就被拒。这里改成允许突发，既能撑住"全班同时刷新"，
+# 又能拦住 setInterval 写死循环那种真正的滥用。
+_read_buckets: dict = {}
 _read_lock = threading.Lock()
 
 
@@ -53,19 +58,29 @@ def _task_brief(task: dict) -> dict:
 
 
 def _read_gate_check(apiid: str):
-    """全量读取加一个最小间隔，避免有人写个死循环把服务器刷爆。"""
-    interval = current_app.config["API_MIN_READ_INTERVAL"]
+    """返回需要等待的秒数，0 表示放行。"""
+    burst = float(current_app.config["API_READ_BURST"])
+    rate = float(current_app.config["API_READ_RATE"])
+    if burst <= 0 or rate <= 0:
+        return 0
+
     key = f"{apiid}|{request.remote_addr}"
     now = time.time()
     with _read_lock:
-        last = _read_gate.get(key, 0)
-        if now - last < interval:
-            return interval - (now - last)
-        _read_gate[key] = now
+        tokens, last = _read_buckets.get(key, (burst, now))
+        tokens = min(burst, tokens + (now - last) * rate)
+
+        if tokens < 1:
+            _read_buckets[key] = (tokens, now)
+            return (1 - tokens) / rate
+
+        _read_buckets[key] = (tokens - 1, now)
+
         # 顺手清一清，避免字典无限增长
-        if len(_read_gate) > 4096:
-            for k in [k for k, v in _read_gate.items() if now - v > 300]:
-                _read_gate.pop(k, None)
+        if len(_read_buckets) > 4096:
+            for k in [k for k, (tok, ts) in _read_buckets.items()
+                      if now - ts > 300 and tok >= burst]:
+                _read_buckets.pop(k, None)
     return 0
 
 

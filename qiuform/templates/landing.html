@@ -23,20 +23,40 @@
   <div class="home-note">
     <h2>能收的不只是表格</h2>
     <p class="small muted">
-      字段不用提前定义，网页里拿得到什么就能存什么。所以除了填写的内容，
-      这些也都能一起收上来：
+      一个任务就是一个地址：网页往里写，也能从这儿读回来。
+      所以它能做的事，比“收一张表”要多。
     </p>
-    <ul class="quiet-list small">
-      <li>交互过程 —— 每一步点了哪里、按了什么顺序</li>
-      <li>用时与反应时间 —— 每道题、每一轮分别花了多久</li>
-      <li>对错与尝试次数 —— 答对几次、错几次、改过几次</li>
-      <li>是否看过提示 —— 看了几次、看的是哪一条</li>
-      <li>动画或小游戏里的操作记录、得分、中途退出</li>
-      <li>图片、音频、PDF 等文件</li>
-    </ul>
-    <p class="small muted" style="margin-top:14px">
-      一个页面把数据 POST 到 <span class="mono">{{ base_url() }}/api/&lt;任务编号&gt;</span> 就行，
-      不需要注册、不需要密钥。
+
+    <div class="home-points">
+      <div class="home-point">
+        <h3>写什么，页面说了算</h3>
+        <p>
+          字段不用提前定义。除了填写的内容，过程也能一起存下来 ——
+          每一步点了哪里、改过几次；每道题分别花了多久；答对几次、错几次；
+          有没有看过提示；小游戏里的得分和中途退出。
+        </p>
+      </div>
+
+      <div class="home-point">
+        <h3>写完能马上读回来</h3>
+        <p>
+          同一个地址既能写也能读。所以交完可以立刻看到全班的分布，
+          可以另做一个实时大屏，也可以让几台设备共用同一份数据 ——
+          这些都不用再搭后端。
+        </p>
+      </div>
+
+      <div class="home-point">
+        <h3>不只是网页能写</h3>
+        <p>
+          接口是普通的 HTTP 地址，不需要密钥。一段脚本、一块能联网的
+          开发板（树莓派、ESP32 之类），同样能往里写、往外读。
+        </p>
+      </div>
+    </div>
+
+    <p class="small muted" style="margin-top:18px">
+      页面把数据 POST 到 <span class="mono">{{ base_url() }}/api/&lt;任务编号&gt;</span> 就行。
     </p>
   </div>
 </section>

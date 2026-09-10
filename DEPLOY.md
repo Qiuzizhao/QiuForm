@@ -93,6 +93,17 @@ sudo tar -czf ~/qiuform-backup-$(date +%F).tar.gz -C /var/lib qiuform
 nginx 的 `client_max_body_size`（现在 64m）和应用里的
 `MAX_CONTENT_LENGTH`（48m）要匹配，两个都别超过对方太多。
 
+**读取限流怎么调。**
+读取限流按「任务 + 客户端 IP」计，允许突发 20 次、之后每秒补 5 次
+（`QIUFORM_READ_BURST` / `QIUFORM_READ_RATE`）。之所以给这么宽的突发，
+是因为一个班的学生走学校同一个出口 IP，如果按"最小间隔"限流，
+第二个人打开看板就会被拒。要在 systemd 里调整：
+
+```bash
+sudo systemctl edit qiuform     # 加 [Service] Environment=QIUFORM_READ_BURST=50
+sudo systemctl restart qiuform
+```
+
 **Cloudflare 拦了脚本请求。**
 默认的 `Python-urllib/x.y` 这个 User-Agent 会被 Cloudflare 的机器人规则
 返回 403；`curl`、浏览器、`python-requests` 都正常。写脚本调接口时

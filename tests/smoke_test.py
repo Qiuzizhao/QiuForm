@@ -10,6 +10,7 @@
 """
 
 import http.cookiejar
+import concurrent.futures
 import json
 import re
 import struct
@@ -216,8 +217,43 @@ def main():
     check("数组字段原样保留",
           any(s.get("tags") == ["a", "b"] for s in payload["submissions"]))
 
-    status, raw, _, _ = client.get(f"/api/{apiid}/all")
-    check("全量读取有最小间隔（429）", status == 429, f"status={status}")
+    # 突发读取要放行：一个班的学生走学校同一个出口 IP，
+    # 如果按"最小间隔"限流，第二个人打开看板就被拒了。
+    burst_ok = 0
+    for _ in range(10):
+        status, _, _, _ = client.get(f"/api/{apiid}/all")
+        if status == 200:
+            burst_ok += 1
+        else:
+            break
+    check("连续 10 次全量读取全部放行（全班同时刷新看板）", burst_ok == 10,
+          f"只成功 {burst_ok} 次")
+
+    # 但并发猛刷还是会被拦住。
+    # 注意要用并发：顺序请求受网络延迟限制，消耗速度追不上令牌补充速度，
+    # 在慢网络下永远刷不爆 —— 而真正要防的正是"页面里写死循环并发刷新"。
+    def hammer(_index):
+        req = urllib.request.Request(
+            BASE + f"/api/{apiid}/all",
+            headers={"User-Agent": "QiuForm-SmokeTest/1.0"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                return resp.status, ""
+        except urllib.error.HTTPError as exc:
+            return exc.code, exc.read().decode("utf-8", "replace")
+        except Exception as exc:                      # noqa: BLE001
+            return 0, str(exc)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as pool:
+        results = list(pool.map(hammer, range(40)))
+    codes = [code for code, _ in results]
+    check("并发猛刷会被限流（429）", 429 in codes,
+          f"40 个并发请求，返回码：{sorted(set(codes))}")
+    limited_body = next((body for code, body in results if code == 429), "")
+    if limited_body:
+        check("429 里带上 retry_after",
+              "retry_after" in json.loads(limited_body), limited_body[:120])
 
     status, raw, _, _ = client.get("/api/nonexistent00")
     check("不存在的任务返回 404", status == 404, f"status={status}")

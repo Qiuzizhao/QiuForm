@@ -4,35 +4,174 @@
 {% block page_class %}home-page{% endblock %}
 
 {% block content %}
-<section class="home-hero">
+
+{# ---------------------------------------------------------------- Hero #}
+<section class="lp-hero">
+  <div class="lp-glow" aria-hidden="true"></div>
+
+  <span class="lp-pill">
+    <span class="lp-pill-dot"></span> 开源 · 可自托管
+  </span>
+
   <h1>数据中转站</h1>
-  <p class="home-lead">
-    每个任务一个地址：POST 写入，GET 读出，数据可导出。
+
+  <p class="lp-sub">
+    每个任务一个地址。网页 POST 写入、GET 读出，
+    不需要注册、不需要后端、不预设字段。
   </p>
-  <div class="home-actions">
-    <a class="btn btn-lg btn-primary" href="{{ url_for('auth.login') }}">登录</a>
-    <a class="btn btn-lg" href="{{ url_for('auth.register') }}">注册</a>
+
+  <div class="lp-cta">
+    <a class="btn btn-lg btn-primary" href="{{ url_for('auth.register') }}">
+      创建第一个任务 {{ icon('arrow-right', 16) }}</a>
+    <a class="btn btn-lg" href="{{ url_for('auth.login') }}">登录</a>
   </div>
 </section>
 
-<section class="home-flow">
-  <div class="flow-panel">
-    <div class="flow-label">{{ icon('link', 14) }} 网页写进去</div>
-    <pre class="code">POST /api/a1b2c3d4e5f6
+{# ------------------------------------------------------------ 产品示意 #}
+<section class="lp-showcase">
+  <div class="lp-window">
+    <div class="lp-window-bar">
+      <span class="lp-lights" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="lp-window-url mono">/api/a1b2c3d4e5f6</span>
+    </div>
 
-{ "第几轮": 3,
+    <div class="lp-window-body">
+      <div class="lp-pane">
+        <div class="lp-pane-label">{{ icon('link', 14) }} 网页写进去</div>
+        <pre class="lp-code">POST /api/a1b2c3d4e5f6
+
+{
+  "第几轮": 3,
   "反应时间ms": 412,
-  "看过提示": false }</pre>
+  "看过提示": false
+}</pre>
+      </div>
+
+      <div class="lp-pane">
+        <div class="lp-pane-label">{{ icon('eye', 14) }} 别的页面读回来</div>
+        <pre class="lp-code">GET /api/a1b2c3d4e5f6/all
+
+{
+  "total": 24,
+  "submissions": [ … ]
+}</pre>
+      </div>
+    </div>
   </div>
+</section>
 
-  <div class="flow-arrow">{{ icon('arrow-right', 18) }}</div>
+{# ---------------------------------------------------------------- 能力 #}
+<section class="lp-section">
+  <header class="lp-head">
+    <span class="lp-eyebrow">能力</span>
+    <h2>表格收不到的几件事</h2>
+    <p>表单问一次、收一次、一个人填。这些它做不到。</p>
+  </header>
 
-  <div class="flow-panel">
-    <div class="flow-label">{{ icon('eye', 14) }} 别的页面读回来</div>
-    <pre class="code">GET /api/a1b2c3d4e5f6/all
+  <div class="lp-bento">
+    <article class="lp-card lp-span2">
+      <div class="lp-card-icon">{{ icon('activity', 16) }}</div>
+      <h3>一节课里的理解程度曲线</h3>
+      <p>课中随手点几下，得到的是曲线，不是一个问题。</p>
+      <svg class="lp-spark" viewBox="0 0 220 56" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="currentColor" stop-opacity=".22"/>
+            <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0 42 L28 30 L56 36 L84 18 L112 24 L140 10 L168 16 L196 6 L220 12 L220 56 L0 56 Z"
+              fill="url(#sparkFill)"/>
+        <path d="M0 42 L28 30 L56 36 L84 18 L112 24 L140 10 L168 16 L196 6 L220 12"
+              fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </article>
 
-{ "total": 24,
-  "submissions": [ … ] }</pre>
+    <article class="lp-card">
+      <div class="lp-card-icon">{{ icon('zap', 16) }}</div>
+      <h3>学生不用停下来填表</h3>
+      <p>照常做题、玩、操作，过程自动记下来 —— 停留多久、回看几次、在哪一步放弃。</p>
+    </article>
+
+    <article class="lp-card">
+      <div class="lp-card-icon">{{ icon('clock', 16) }}</div>
+      <h3>每道题的过程都留着</h3>
+      <p>犹豫了多久、改了几遍、看没看提示、先点哪又删了什么。</p>
+    </article>
+
+    <article class="lp-card">
+      <div class="lp-card-icon">{{ icon('shuffle', 16) }}</div>
+      <h3>每人拿到的题可以不一样</h3>
+      <p>随机出题防抄袭，也可以答对就变难。</p>
+    </article>
+
+    <article class="lp-card">
+      <div class="lp-card-icon">{{ icon('users', 16) }}</div>
+      <h3>交完立刻看到全班</h3>
+      <p>提交后直接显示分布，而不是一句「提交成功」。</p>
+    </article>
+
+    <article class="lp-card">
+      <div class="lp-card-icon">{{ icon('trophy', 16) }}</div>
+      <h3>抢答和实时排名</h3>
+      <p>谁先交、谁最快 —— 时间戳天然带顺序。</p>
+    </article>
+
+    <article class="lp-card lp-span2">
+      <div class="lp-card-icon">{{ icon('link', 16) }}</div>
+      <h3>一个页面写，另一个页面看</h3>
+      <p>学生端提交、教师端大屏，共用一个地址，不用写后端。</p>
+      <div class="lp-diagram" aria-hidden="true">
+        <span class="lp-node">学生端</span>
+        <span class="lp-wire"><i></i></span>
+        <span class="lp-node lp-node-accent mono">/api/…</span>
+        <span class="lp-wire"><i></i></span>
+        <span class="lp-node">大屏</span>
+      </div>
+    </article>
+
+    <article class="lp-card lp-span3">
+      <div class="lp-card-icon">{{ icon('calendar', 16) }}</div>
+      <h3>连着几天的记录</h3>
+      <p>每天追加一条，几天后页面自己读回来画成图，不用重新填一次表。</p>
+    </article>
+  </div>
+</section>
+
+{# ---------------------------------------------------------------- 步骤 #}
+<section class="lp-section">
+  <header class="lp-head">
+    <span class="lp-eyebrow">用法</span>
+    <h2>三步就用起来</h2>
+  </header>
+
+  <ol class="lp-steps">
+    <li>
+      <span class="lp-step-num">1</span>
+      <h3>建一个任务</h3>
+      <p>起个名字，立刻拿到一个专属接口地址。</p>
+    </li>
+    <li>
+      <span class="lp-step-num">2</span>
+      <h3>把地址交给网页</h3>
+      <p>写进提示词，让大模型生成带提交功能的页面；或者直接上传你做好的 HTML。</p>
+    </li>
+    <li>
+      <span class="lp-step-num">3</span>
+      <h3>看数据</h3>
+      <p>后台逐条查看、导出表格；也可以另做一个页面读同一个地址，当实时大屏。</p>
+    </li>
+  </ol>
+</section>
+
+{# ---------------------------------------------------------------- 收尾 #}
+<section class="lp-final">
+  <div class="lp-final-card">
+    <h2>建一个任务，拿到接口地址</h2>
+    <p>注册之后几秒钟就能开始收数据。</p>
+    <a class="btn btn-lg btn-primary" href="{{ url_for('auth.register') }}">
+      创建第一个任务 {{ icon('arrow-right', 16) }}</a>
   </div>
 </section>
 

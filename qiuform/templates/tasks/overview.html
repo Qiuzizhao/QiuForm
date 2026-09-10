@@ -1,0 +1,234 @@
+{% extends "tasks/_layout.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import cell %}
+
+{% block tab %}
+<div class="stats" style="margin-bottom:18px">
+  <div class="card stat">
+    <span class="stat-icon">{{ icon('inbox', 18) }}</span>
+    <div class="stat-num">{{ total }}</div>
+    <div class="stat-label">已收到的提交</div>
+  </div>
+  <div class="card stat">
+    <span class="stat-icon">{{ icon('file', 18) }}</span>
+    <div class="stat-num">{{ page_count }}</div>
+    <div class="stat-label">已上传的文件</div>
+  </div>
+  <div class="card stat">
+    <span class="stat-icon">{{ icon('clock', 18) }}</span>
+    <div class="stat-num small">{{ task.created_at }}</div>
+    <div class="stat-label">创建时间</div>
+  </div>
+</div>
+
+<div class="grid side">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head">
+        <h2>{{ icon('link') }} 数据接口</h2>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label class="label">写入地址（POST）</label>
+          <div class="copybox">
+            <span class="value" id="api-url">{{ urls.api }}</span>
+            <button class="btn btn-sm" data-copy="#api-url" aria-label="复制写入地址">
+              {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <label class="label">读取地址（GET）</label>
+          <div class="copybox">
+            <span class="value" id="api-all">{{ urls.api_all }}</span>
+            <button class="btn btn-sm" data-copy="#api-all" aria-label="复制读取地址">
+              {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+          </div>
+          <p class="hint">
+            不带 <span class="mono">/all</span> 时只返回最近几条，带上才是全量。
+          </p>
+        </div>
+
+        <div class="field" style="margin-top:14px">
+          <label class="label">把这句话交给大模型</label>
+          <div class="copybox wrap">
+            <span class="value" id="prompt">请把网页里的数据以 POST 方式提交到
+              <span class="mono">{{ urls.api }}</span>，不需要鉴权。</span>
+            <button class="btn btn-sm" data-copy="#prompt"
+                    data-copy-raw="请把网页里的数据以 POST 方式提交到 {{ urls.api }}，不需要鉴权。">
+              {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+          </div>
+        </div>
+
+        <details style="margin-top:16px">
+          <summary class="muted small" style="cursor:pointer">
+            {{ icon('image', 15, 'summary-ico') }}还能一起收文件（图片）
+          </summary>
+
+          <div style="margin-top:12px">
+            <p class="small muted">
+              同一个地址也收文件：用 <span class="mono">multipart/form-data</span>
+              提交，文件会存到服务器上，数据里只留一个路径 ——
+              所以数据页和看板可以直接用 <span class="mono">&lt;img src&gt;</span>
+              把图片显示出来。文件字段名随便取，服务器会把它写成
+              <span class="mono">attachment</span> 字段。
+            </p>
+
+            <div class="copybox wrap" style="margin-top:10px">
+              <span class="value" id="upload-prompt">请把页面里的数据以 POST 方式提交到
+                <span class="mono">{{ urls.api }}</span>，文件和表单一起用
+                multipart/form-data 上传。强调：不要将文件编码为 Base64 形式。</span>
+              <button class="btn btn-sm" data-copy="#upload-prompt"
+                      data-copy-raw="请把页面里的数据以 POST 方式提交到 {{ urls.api }}，文件和表单一起用 multipart/form-data 上传。强调：不要将文件编码为 Base64 形式。">
+                {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+            </div>
+            <p class="hint">
+              那句「不要 Base64」很重要：否则大模型常把图片转成一长串字符串塞进
+              JSON，体积膨胀三分之一还可能超限。
+            </p>
+
+            <p class="small muted" style="margin:14px 0 6px">提交后数据长这样：</p>
+            <pre class="code">{
+  "category": "橡皮",
+  "attachment": "/files/{{ task.apiid }}/a1b2c3d4e5.jpg"
+}</pre>
+
+            <ul class="feature-list" style="font-size:.85rem;margin-top:12px">
+              <li>单个文件不超过 {{ upload_max_mb }} MB，建议在页面里先压缩再上传</li>
+              <li>一次可以传多个文件，这时 <span class="mono">attachment</span> 会变成数组</li>
+              <li><details style="display:inline">
+                <summary style="cursor:pointer;display:inline">支持 {{ upload_exts | length }} 种格式</summary>
+                <span class="hint mono" style="font-size:.75rem">{{ upload_exts | join(' · ') }}</span>
+              </details></li>
+            </ul>
+          </div>
+        </details>
+
+        <details style="margin-top:16px">
+          <summary class="muted small" style="cursor:pointer">
+            看看命令行怎么测
+          </summary>
+          <pre class="code" style="margin-top:10px">curl -X POST {{ urls.api }} \
+  -H "Content-Type: application/json" \
+  -d '{"name":"张三","score":85}'
+
+<span class="cmt"># 把数据读回来</span>
+curl {{ urls.api_all }}
+
+<span class="cmt"># 提交一个文件（-F 会自动用 multipart/form-data）</span>
+curl -X POST {{ urls.api }} -F "category=橡皮" -F "file=@photo.jpg"</pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2>{{ icon('inbox') }} 最近提交</h2>
+        {% if total %}
+          <a class="btn btn-sm" href="{{ url_for('tasks.data', apiid=task.apiid) }}">
+            看全部 {{ icon('arrow-right', 14) }}</a>
+        {% endif %}
+      </div>
+      {% if recent %}
+        <div class="card-body" style="padding-top:14px">
+          <div class="stack dense">
+            {% for row in recent %}
+            <div class="card dashed" style="border-radius:var(--r-md)">
+              <div class="card-body tight" style="padding:12px 14px">
+                <div class="row tight" style="margin-bottom:6px">
+                  <span class="chip chip-plain tiny">{{ row.at }}</span>
+                </div>
+                <div class="kv-list">
+                  {% for key, value in row.data.items() %}
+                    <span class="kv">
+                      <span class="kv-k">{{ key }}</span>
+                      <span class="kv-v">{{ cell(value) }}</span>
+                    </span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <div class="empty">
+          <div class="empty-icon">{{ icon('inbox', 22) }}</div>
+          <div class="empty-title">还没有收到数据</div>
+          <p>把接口地址接入网页，或者先上传一个页面。</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>{{ icon('qr') }} 扫码打开</h2></div>
+      <div class="card-body">
+        {% if page_count %}
+          <div class="qr-box">
+            <div class="qr-frame">{{ qr_svg | safe }}</div>
+            <div class="grow">
+              <p class="small muted">学生扫一下就能打开任务页面。</p>
+              <div class="copybox wrap" style="margin-top:10px">
+                <span class="value" id="page-url">{{ urls.page }}</span>
+                <button class="btn btn-sm" data-copy="#page-url">
+                  {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+              </div>
+              <a class="btn btn-sm btn-ghost" style="margin-top:10px"
+                 href="{{ url_for('tasks.qr_svg', apiid=task.apiid) }}"
+                 download="qiuform-{{ task.apiid }}.svg">
+                {{ icon('download', 14) }} 下载二维码
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <div class="empty" style="padding:28px 14px">
+            <div class="empty-icon">{{ icon('file', 22) }}</div>
+            <div class="empty-title">还没有页面</div>
+            <p>上传一个 HTML，这里就会出现二维码。</p>
+            <a class="btn btn-primary btn-sm" style="margin-top:14px"
+               href="{{ url_for('tasks.pages', apiid=task.apiid) }}">
+              {{ icon('upload', 14) }} 去上传页面</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card dashed">
+      <div class="card-head" style="border-color:var(--line)">
+        <h2>{{ icon('sparkles') }} 三步走</h2>
+      </div>
+      <div class="card-body">
+        <div class="icon-list">
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('link', 15) }}</div>
+            <div>
+              <div class="icon-list-title">把地址写进提示词</div>
+              <div class="icon-list-desc">让大模型生成带提交功能的网页。</div>
+            </div>
+          </div>
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('upload', 15) }}</div>
+            <div>
+              <div class="icon-list-title">把 HTML 传到「页面」</div>
+              <div class="icon-list-desc">得到公开网址和二维码，地址会自动改写。</div>
+            </div>
+          </div>
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('table', 15) }}</div>
+            <div>
+              <div class="icon-list-title">在「数据」里看结果</div>
+              <div class="icon-list-desc">逐条查看、导出表格，或者做实时大屏。</div>
+            </div>
+          </div>
+        </div>
+        <p class="hint" style="margin-top:14px">
+          页面里用相对地址 <span class="mono">/api/{{ task.apiid }}</span> 就行，
+          换域名、换端口都不用改代码。
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

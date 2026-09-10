@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}页面还没准备好 · {{ SITE_NAME }}{% endblock %}
+{% block page_class %}narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body center" style="padding:46px 24px">
+    <div class="empty-icon" style="margin-bottom:16px">{{ icon('file', 22) }}</div>
+    <h1 style="font-size:1.2rem;margin-bottom:10px">这个任务还没有页面</h1>
+    <p class="muted small">
+      「{{ task.name }}」还没有上传网页文件。
+      如果你是这个任务的创建者，登录后到「页面」标签页上传即可。
+    </p>
+    <div class="row" style="justify-content:center;margin-top:22px">
+      <a class="btn btn-primary" href="{{ url_for('auth.login') }}">
+        {{ icon('user', 15) }} 登录后上传</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

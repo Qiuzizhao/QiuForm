@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}{{ code }} · {{ SITE_NAME }}{% endblock %}
+{% block page_class %}narrow{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body center" style="padding:46px 24px">
+    <div class="empty-icon" style="margin-bottom:16px">
+      {{ icon('alert', 22) }}
+    </div>
+    <div class="stat-num" style="color:var(--accent);font-size:2.6rem">{{ code }}</div>
+    <h1 style="margin:8px 0 8px;font-size:1.15rem">{{ title }}</h1>
+    <p class="muted small">{{ message }}</p>
+    <div class="row" style="justify-content:center;margin-top:22px">
+      <a class="btn btn-primary" href="{{ url_for('tasks.index') }}">
+        {{ icon('home', 15) }} 回到首页</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+# 部署目标是 Linux，统一用 LF，避免 shell 脚本带 \r 跑不起来
+* text=auto eol=lf
+
+# 二进制文件不要做行尾转换
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff2 binary
+*.zip binary
+*.gz binary

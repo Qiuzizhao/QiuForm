@@ -1,0 +1,84 @@
+{% extends "tasks/_layout.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import cell %}
+
+{% block tab %}
+<div class="card">
+  <div class="card-head">
+    <h2>{{ icon('table') }} 提交记录
+      <span class="chip chip-count">{{ total }}</span></h2>
+    <div class="row tight">
+      <a class="btn btn-sm" href="{{ url_for('tasks.export_csv', apiid=task.apiid) }}">
+        {{ icon('download', 14) }} CSV</a>
+      <a class="btn btn-sm" href="{{ url_for('tasks.export_json', apiid=task.apiid) }}">
+        {{ icon('download', 14) }} JSON</a>
+      {% if total %}
+      <form method="post" action="{{ url_for('tasks.clear_data', apiid=task.apiid) }}"
+            onsubmit="return confirm('会删掉全部 {{ total }} 条记录，确定吗？');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-danger" type="submit" title="清空全部提交记录">
+          {{ icon('trash', 14) }} 清空</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if rows %}
+    <div class="table-wrap">
+      <table class="table responsive">
+        <thead>
+          <tr>
+            <th>提交时间</th>
+            {% for col in columns %}<th>{{ col }}</th>{% endfor %}
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td data-label="时间" class="muted tiny nowrap">{{ row.at }}</td>
+            {% for col in columns %}
+              {#- 空值不渲染内容，窄屏下用 CSS 的 :empty 把整行藏掉 -#}
+              {% set value = row.data.get(col) %}
+              <td data-label="{{ col }}">{% if value is not none and value != '' %}<div class="cell-clip">{{ cell(value) }}</div>{% endif %}</td>
+            {% endfor %}
+            <td class="actions">
+              <form method="post"
+                    action="{{ url_for('tasks.delete_submission', apiid=task.apiid, submission_id=row.id) }}"
+                    onsubmit="return confirm('删除这条记录？');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger" type="submit" title="删除这条记录">
+                  {{ icon('trash', 14) }}</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="pager">
+      {% if page_no > 1 %}
+        <a class="btn btn-sm" href="{{ url_for('tasks.data', apiid=task.apiid, page=page_no-1) }}">
+          {{ icon('arrow-left', 14) }} 上一页</a>
+      {% endif %}
+      <span>第 {{ page_no }} / {{ total_pages }} 页 · 每页 {{ page_size }} 条</span>
+      {% if page_no < total_pages %}
+        <a class="btn btn-sm" href="{{ url_for('tasks.data', apiid=task.apiid, page=page_no+1) }}">
+          下一页 {{ icon('arrow-right', 14) }}</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="empty">
+      <div class="empty-icon">{{ icon('inbox', 22) }}</div>
+      <div class="empty-title">还没有数据</div>
+      <p>
+        学生提交后记录会实时出现在这里。字段是自动识别出来的，
+        不需要提前定义表结构。
+      </p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

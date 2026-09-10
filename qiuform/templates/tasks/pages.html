@@ -1,0 +1,135 @@
+{% extends "tasks/_layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block tab %}
+<div class="grid side">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head">
+        <h2>{{ icon('file') }} 任务文件</h2>
+        {% if pages %}<span class="chip chip-count">{{ pages | length }} 个</span>{% endif %}
+      </div>
+
+      {% if pages %}
+        <div class="filelist">
+          {% for item in pages %}
+          <div class="fileitem">
+            <div class="fileicon {{ '' if item.is_html else 'asset' }}">
+              {{ (item.filename.rsplit('.', 1)[-1] if '.' in item.filename else '?') | upper | truncate(4, true, '') }}
+            </div>
+            <div class="filemeta">
+              <div class="filename">
+                {{ item.filename }}
+                {% if item.is_primary %}
+                  <span class="chip chip-read_write">{{ icon('home', 12) }} 主页</span>
+                {% endif %}
+              </div>
+              <div class="tiny muted" style="margin-top:2px">
+                {{ item.size | human_size }} · 上传于 {{ item.created_at }}
+              </div>
+            </div>
+            <div class="row tight">
+              <a class="btn btn-sm" target="_blank"
+                 href="{{ url_for('public.page_file', apiid=task.apiid, filename=item.filename) }}">
+                {{ icon('eye', 14) }} 预览</a>
+              {% if item.is_html and not item.is_primary %}
+              <form method="post"
+                    action="{{ url_for('tasks.set_primary', apiid=task.apiid, filename=item.filename) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm" type="submit" title="设为任务主页">设为主页</button>
+              </form>
+              {% endif %}
+              <form method="post"
+                    action="{{ url_for('tasks.delete_page', apiid=task.apiid, filename=item.filename) }}"
+                    onsubmit="return confirm('确定删除 {{ item.filename }} 吗？');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger" type="submit" title="删除这个文件">
+                  {{ icon('trash', 14) }}</button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty">
+          <div class="empty-icon">{{ icon('file', 22) }}</div>
+          <div class="empty-title">还没有上传文件</div>
+          <p>把大模型生成的 HTML 传上来，就有公开网址和二维码了。</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card accent">
+      <div class="card-head"><h2>{{ icon('upload') }} 上传文件</h2></div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="{{ url_for('tasks.upload_pages', apiid=task.apiid) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          <div class="drop" data-drop>
+            <div class="drop-icon">{{ icon('upload', 26) }}</div>
+            <div class="drop-title" data-drop-title>拖文件到这里，或点击选择</div>
+            <p class="hint" style="margin-top:4px">
+              支持 .html，以及它用到的 .css / .js / 图片
+            </p>
+            <p class="drop-count" data-drop-count></p>
+            <input type="file" name="files" multiple
+                   accept=".html,.htm,.css,.js,.json,.svg,.png,.jpg,.jpeg,.gif,.webp,.ico,.woff,.woff2,.ttf">
+          </div>
+
+          <label class="radio-card" style="margin-top:14px">
+            <input type="checkbox" name="make_primary" value="1">
+            <span class="radio-card-body">
+              <span class="radio-card-title">上传后设为任务主页</span>
+              <span class="radio-card-desc">不勾选的话，第一个上传的 HTML 会自动成为主页。</span>
+            </span>
+          </label>
+
+          <button class="btn btn-primary btn-block" type="submit" style="margin-top:14px">
+            {{ icon('upload', 15) }} 开始上传
+          </button>
+          <p class="hint">单个文件不超过 {{ max_page_mb }} MB。可以一次选中多个文件一起传。</p>
+        </form>
+      </div>
+    </div>
+
+    <div class="card dashed">
+      <div class="card-head" style="border-color:var(--line)">
+        <h2>{{ icon('sparkles') }} 上传时会自动做的事</h2>
+      </div>
+      <div class="card-body">
+        <div class="icon-list">
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('link', 15) }}</div>
+            <div>
+              <div class="icon-list-title">改写接口地址</div>
+              <div class="icon-list-desc">
+                HTML 里指向 <span class="mono">/api/…</span> 的地址会自动换成
+                本任务的地址，而且改成相对路径 —— 换域名也不用重新改页面。
+              </div>
+            </div>
+          </div>
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('home', 15) }}</div>
+            <div>
+              <div class="icon-list-title">自动设主页</div>
+              <div class="icon-list-desc">第一个上传的 HTML 直接成为任务主页。</div>
+            </div>
+          </div>
+          <div class="icon-list-item">
+            <div class="icon-list-icon">{{ icon('image', 15) }}</div>
+            <div>
+              <div class="icon-list-title">配套资源一起托管</div>
+              <div class="icon-list-desc">
+                相对路径引用的 css、js、图片会一并上传，页面能正常打开。
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

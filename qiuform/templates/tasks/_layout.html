@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import mode_chip %}
+
+{% block title %}{{ task.name }} · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="task-head">
+  <div class="task-title">
+    <h1>{{ task.name }}</h1>
+    <div class="task-meta muted small">
+      {% if task.description %}<span>{{ task.description }}</span>{% endif %}
+      <span class="mono tiny">{{ task.apiid }}</span>
+      <span class="tiny">创建于 {{ task.created_at }}</span>
+    </div>
+  </div>
+  <div class="row tight">
+    {{ mode_chip(task.mode) }}
+    {% if page_count %}
+      <a class="btn btn-sm" href="{{ urls.page }}" target="_blank">
+        {{ icon('external', 14) }} 打开页面</a>
+    {% endif %}
+  </div>
+</div>
+
+<nav class="tabs">
+  <a class="tab {% if tab == 'overview' %}active{% endif %}"
+     href="{{ url_for('tasks.overview', apiid=task.apiid) }}">
+    {{ icon('home', 15) }} 概览</a>
+  <a class="tab {% if tab == 'pages' %}active{% endif %}"
+     href="{{ url_for('tasks.pages', apiid=task.apiid) }}">
+    {{ icon('file', 15) }} 页面</a>
+  <a class="tab {% if tab == 'data' %}active{% endif %}"
+     href="{{ url_for('tasks.data', apiid=task.apiid) }}">
+    {{ icon('table', 15) }} 数据</a>
+  <a class="tab {% if tab == 'settings' %}active{% endif %}"
+     href="{{ url_for('tasks.settings', apiid=task.apiid) }}">
+    {{ icon('settings', 15) }} 设置</a>
+</nav>
+
+{% block tab %}{% endblock %}
+{% endblock %}

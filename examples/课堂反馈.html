@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>课堂反馈</title>
+<style>
+  :root { --ink: #16181f; --muted: #6b7280; --line: #e5e7eb; --brand: #3b5bfd; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f4f5f9; color: var(--ink);
+    font: 16px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .card {
+    width: min(520px, 92vw); background: #fff; border: 1px solid var(--line);
+    border-radius: 16px; padding: 28px; box-shadow: 0 18px 40px -24px rgba(20,24,40,.35);
+  }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .88rem; margin: 0 0 22px; }
+  label { display: block; font-size: .87rem; font-weight: 600; margin: 0 0 14px; }
+  input[type=text], textarea {
+    width: 100%; font: inherit; font-size: .95rem; margin-top: 6px;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px;
+  }
+  textarea { resize: vertical; min-height: 78px; }
+  input:focus, textarea:focus { outline: 2px solid #cdd8ff; border-color: var(--brand); }
+  fieldset {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; margin: 0 0 16px;
+  }
+  legend { font-size: .87rem; font-weight: 600; padding: 0 6px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opts label {
+    display: inline-flex; align-items: center; gap: 6px; margin: 0;
+    font-weight: 400; font-size: .92rem;
+    border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px;
+    cursor: pointer;
+  }
+  .opts input { margin: 0; }
+  .opts label:has(input:checked) {
+    border-color: var(--brand); background: #eef2ff; color: var(--brand);
+  }
+  button {
+    width: 100%; font: inherit; font-size: 1rem; font-weight: 600;
+    padding: 12px; border: 0; border-radius: 10px;
+    background: var(--brand); color: #fff; cursor: pointer;
+  }
+  button:hover { background: #2c47d6; }
+  button:disabled { opacity: .6; cursor: default; }
+  .msg { margin-top: 14px; font-size: .9rem; padding: 10px 13px; border-radius: 9px; }
+  .msg.ok  { background: #e8f7f0; color: #0a7247; }
+  .msg.err { background: #fdeeee; color: #a52a2a; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>课堂反馈</h1>
+  <p class="sub">一分钟填完，帮助老师调整下节课的节奏。</p>
+
+  <form id="form">
+    <label>姓名
+      <input type="text" name="姓名" required placeholder="例：张三">
+    </label>
+
+    <fieldset>
+      <legend>本节课的掌握程度</legend>
+      <div class="opts">
+        <label><input type="radio" name="掌握程度" value="完全掌握" checked> 完全掌握</label>
+        <label><input type="radio" name="掌握程度" value="基本掌握"> 基本掌握</label>
+        <label><input type="radio" name="掌握程度" value="还没听懂"> 还没听懂</label>
+      </div>
+    </fieldset>
+
+    <label>最有收获的一点
+      <textarea name="一句话收获" placeholder="随便写一句"></textarea>
+    </label>
+
+    <button type="submit">提交</button>
+  </form>
+  <div id="msg"></div>
+</div>
+
+<script>
+  // 这一行就是全部的秘密：把数据 POST 到接口地址。
+  // 这里的占位符在上传到 QiuForm 后会被自动改写成该任务的真实地址。
+  var ENDPOINT = "/api/YOUR_TASK_ID_HERE";
+
+  var form = document.getElementById('form');
+  var msg = document.getElementById('msg');
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    var button = form.querySelector('button');
+    var data = {};
+    new FormData(form).forEach(function (value, key) { data[key] = value; });
+
+    button.disabled = true;
+    msg.className = '';
+    msg.textContent = '提交中…';
+
+    try {
+      var response = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      var result = await response.json();
+      if (response.ok && result.ok) {
+        msg.className = 'msg ok';
+        msg.textContent = '提交成功，谢谢！';
+        form.reset();
+      } else {
+        msg.className = 'msg err';
+        msg.textContent = result.message || ('提交失败（' + response.status + '）');
+      }
+    } catch (err) {
+      msg.className = 'msg err';
+      msg.textContent = '网络错误：' + err.message;
+    }
+    button.disabled = false;
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+
+# 运行期数据：数据库、上传的网页与附件、会话密钥
+data/
+
+# 装到项目内的依赖
+.vendor/
+.venv/
+
+*.log
+
+# 本地资料，不属于产品代码
+qiuform-demo/
+research/
+tools/
+QuickForm平台功能文档.md

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}注册 · {{ SITE_NAME }}{% endblock %}
+{% block page_class %}narrow{% endblock %}
+
+{% block content %}
+<div class="center" style="margin-bottom:24px">
+  <h1 style="font-size:1.4rem">创建账号</h1>
+  <p class="muted small" style="margin-top:6px">
+    免费，一分钟就能开始收数据
+  </p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="label" for="username">用户名</label>
+        <input class="input" id="username" name="username" value="{{ form.username }}"
+               autocomplete="username" autofocus required maxlength="24"
+               placeholder="例：谢老师">
+        <p class="hint">2~24 个字符，中英文、数字、下划线、点、短横线都可以。</p>
+      </div>
+      <div class="field">
+        <label class="label" for="display_name">
+          显示名称 <span class="opt">（可空）</span>
+        </label>
+        <input class="input" id="display_name" name="display_name"
+               value="{{ form.display_name }}" maxlength="40"
+               placeholder="不填就用用户名">
+      </div>
+      <div class="field">
+        <label class="label" for="password">密码</label>
+        <input class="input" id="password" name="password" type="password"
+               autocomplete="new-password" required minlength="6"
+               placeholder="至少 6 位">
+      </div>
+      <div class="field">
+        <label class="label" for="confirm">确认密码</label>
+        <input class="input" id="confirm" name="confirm" type="password"
+               autocomplete="new-password" required minlength="6">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">
+        {{ icon('arrow-right', 16) }} 创建账号
+      </button>
+    </form>
+  </div>
+</div>
+
+<p class="muted small center" style="margin-top:18px">
+  已经有账号了？<a href="{{ url_for('auth.login') }}">直接登录</a>
+</p>
+{% endblock %}

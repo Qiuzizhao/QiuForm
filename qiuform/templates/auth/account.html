@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}账号设置 · {{ SITE_NAME }}{% endblock %}
+{% block page_class %}narrow{% endblock %}
+
+{% block content %}
+<h1 style="margin-bottom:6px">账号设置</h1>
+<p class="muted small" style="margin-bottom:22px">管理你的资料和密码</p>
+
+<div class="stats two" style="margin-bottom:16px">
+  <div class="card stat">
+    <span class="stat-icon">{{ icon('grid', 18) }}</span>
+    <div class="stat-num">{{ stats.tasks }}</div>
+    <div class="stat-label">创建的任务</div>
+  </div>
+  <div class="card stat">
+    <span class="stat-icon">{{ icon('inbox', 18) }}</span>
+    <div class="stat-num">{{ stats.submissions }}</div>
+    <div class="stat-label">累计收到的提交</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <div class="card-head"><h2>{{ icon('user') }} 基本资料</h2></div>
+  <div class="card-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="profile">
+      <div class="field">
+        <label class="label">用户名</label>
+        <input class="input" value="{{ user.username }}" disabled>
+        <p class="hint">用户名不能修改。</p>
+      </div>
+      <div class="field">
+        <label class="label" for="display_name">显示名称</label>
+        <input class="input" id="display_name" name="display_name"
+               value="{{ user.display_name }}" maxlength="40">
+      </div>
+      <button class="btn btn-primary" type="submit">
+        {{ icon('check', 15) }} 保存
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h2>{{ icon('shield') }} 修改密码</h2></div>
+  <div class="card-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="password">
+      <div class="field">
+        <label class="label" for="current">当前密码</label>
+        <input class="input" id="current" name="current" type="password"
+               autocomplete="current-password" required>
+      </div>
+      <div class="field">
+        <label class="label" for="new">新密码</label>
+        <input class="input" id="new" name="new" type="password"
+               autocomplete="new-password" required minlength="6">
+      </div>
+      <div class="field">
+        <label class="label" for="confirm">确认新密码</label>
+        <input class="input" id="confirm" name="confirm" type="password"
+               autocomplete="new-password" required minlength="6">
+      </div>
+      <button class="btn" type="submit">修改密码</button>
+      <p class="hint">改完需要重新登录。</p>
+    </form>
+  </div>
+</div>
+{% endblock %}

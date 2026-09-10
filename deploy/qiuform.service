@@ -1,0 +1,58 @@
+# QiuForm systemd 服务
+#
+# 这个文件里的 __APP_DIR__ / __DATA_DIR__ / __PORT__ 由 deploy/setup.sh
+# 替换成实际路径后安装到 /etc/systemd/system/qiuform.service。
+#
+# 手动改端口、改域名，改这里的 Environment 再 `systemctl restart qiuform`。
+
+[Unit]
+Description=QiuForm - 给网页收数据的接口服务
+Documentation=https://github.com/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=qiuform
+Group=qiuform
+WorkingDirectory=__APP_DIR__
+
+# 数据（数据库、上传的网页和附件、会话密钥）都放在这里
+Environment=QIUFORM_DATA_DIR=__DATA_DIR__
+Environment=QIUFORM_HOST=127.0.0.1
+Environment=QIUFORM_PORT=__PORT__
+
+# 站点跑在 nginx 后面：从 X-Forwarded-* 还原真实的域名和协议，
+# 否则生成的接口地址和二维码会写成 http://127.0.0.1
+Environment=QIUFORM_TRUST_PROXY=1
+
+# 对外地址直接钉死，不依赖请求头，最稳
+Environment=QIUFORM_BASE_URL=https://qiuform.qiuzizhao.com
+
+# 站点走 HTTPS，会话 Cookie 只通过加密连接发送
+Environment=QIUFORM_SECURE_COOKIE=1
+
+Environment=PYTHONUNBUFFERED=1
+
+ExecStart=__APP_DIR__/.venv/bin/python __APP_DIR__/run.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
+
+# 只监听本机，外面由 nginx 转发
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qiuform
+
+# ---- 基本加固 ----
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=__DATA_DIR__
+
+[Install]
+WantedBy=multi-user.target

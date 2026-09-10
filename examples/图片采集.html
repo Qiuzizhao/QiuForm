@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>图像采集</title>
+<style>
+  :root { --ink: #16181f; --muted: #6b7280; --line: #e5e7eb; --brand: #3b5bfd; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center;
+    background: #f4f5f9; color: var(--ink); padding: 20px;
+    font: 16px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .card {
+    width: min(540px, 100%); background: #fff; border: 1px solid var(--line);
+    border-radius: 16px; padding: 28px;
+    box-shadow: 0 18px 40px -24px rgba(20, 24, 40, .35);
+  }
+  h1 { font-size: 1.35rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: .88rem; margin: 0 0 22px; }
+  .label { display: block; font-size: .87rem; font-weight: 600; margin: 0 0 14px; }
+  fieldset {
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 12px 14px; margin: 0 0 16px;
+  }
+  legend { font-size: .87rem; font-weight: 600; padding: 0 6px; }
+  .cats { display: flex; flex-wrap: wrap; gap: 8px; }
+  .cats label {
+    display: inline-flex; align-items: center; gap: 6px; margin: 0;
+    font-size: .92rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer;
+  }
+  .cats input { margin: 0; }
+  .cats label:has(input:checked) {
+    border-color: var(--brand); background: #eef2ff; color: var(--brand);
+  }
+  .pick {
+    display: block; border: 1.5px dashed #ccd4ea; border-radius: 12px;
+    padding: 22px; text-align: center; background: #fbfcff; cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+  .pick:hover { border-color: var(--brand); background: #f4f6ff; }
+  .pick input { display: none; }
+  .pick-title { font-weight: 600; margin-bottom: 2px; }
+  .preview { margin-top: 14px; }
+  .preview img {
+    max-width: 100%; max-height: 260px; border-radius: 10px;
+    border: 1px solid var(--line); display: block;
+  }
+  .preview p { color: var(--muted); font-size: .82rem; margin: 6px 0 0; }
+  button {
+    width: 100%; font: inherit; font-size: 1rem; font-weight: 600;
+    padding: 12px; border: 0; border-radius: 10px; margin-top: 16px;
+    background: var(--brand); color: #fff; cursor: pointer;
+  }
+  button:hover { background: #2c47d6; }
+  button[disabled] { opacity: .55; cursor: not-allowed; }
+  .msg { margin-top: 14px; font-size: .9rem; padding: 10px 13px; border-radius: 9px; }
+  .msg.ok  { background: #e8f7f0; color: #0a7247; }
+  .msg.err { background: #fdeeee; color: #a52a2a; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>校园文具分类图像采集</h1>
+  <p class="sub">选一个分类，拍一张或选一张图片，提交即可。</p>
+
+  <form id="form">
+    <fieldset>
+      <legend>图像分类</legend>
+      <div class="cats">
+        <label><input type="radio" name="category" value="橡皮" checked> 橡皮</label>
+        <label><input type="radio" name="category" value="笔"> 笔</label>
+        <label><input type="radio" name="category" value="修正带"> 修正带</label>
+        <label><input type="radio" name="category" value="尺子"> 尺子</label>
+        <label><input type="radio" name="category" value="圆规"> 圆规</label>
+        <label><input type="radio" name="category" value="文具盒"> 文具盒</label>
+      </div>
+    </fieldset>
+
+    <label class="pick">
+      <input id="file" type="file" accept="image/*" capture="environment">
+      <div class="pick-title">点击选择图片</div>
+      <div class="sub" style="margin:0">手机上可以直接调起相机</div>
+    </label>
+
+    <div class="preview" id="preview"></div>
+
+    <button type="submit" id="submit">上传并提交</button>
+  </form>
+  <div id="msg"></div>
+</div>
+
+<script>
+  // 接口地址。占位符在上传到 QiuForm 后会被自动改写成本任务的真实地址。
+  var ENDPOINT = "/api/YOUR_TASK_ID_HERE";
+
+  // 上传前先压缩到这个大小以内 —— 后端限制 8MB，压到 2MB 上传更快
+  var COMPRESS_TO = 2 * 1024 * 1024;
+
+  var form = document.getElementById('form');
+  var fileInput = document.getElementById('file');
+  var preview = document.getElementById('preview');
+  var msg = document.getElementById('msg');
+  var submitButton = document.getElementById('submit');
+  var chosen = null;
+
+  function kb(n) { return (n / 1024).toFixed(0) + ' KB'; }
+
+  function loadImage(file) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      img.onload = function () { resolve(img); };
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  // 用 canvas 缩放 + 降质量，直到小于目标体积
+  async function compress(file) {
+    if (!file.type.startsWith('image/') || file.size <= COMPRESS_TO) return file;
+    var img = await loadImage(file);
+    var scale = Math.min(1, Math.sqrt(COMPRESS_TO / file.size) * 0.95);
+    var quality = 0.85;
+    var blob = null;
+    for (var i = 0; i < 8; i++) {
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.width * scale));
+      canvas.height = Math.max(1, Math.round(img.height * scale));
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      blob = await new Promise(function (r) {
+        canvas.toBlob(r, 'image/jpeg', quality);
+      });
+      if (blob && blob.size <= COMPRESS_TO) break;
+      scale *= 0.8;
+      quality = Math.max(0.4, quality - 0.1);
+    }
+    if (!blob) return file;
+    return new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+  }
+
+  fileInput.addEventListener('change', async function () {
+    var file = fileInput.files[0];
+    if (!file) return;
+    msg.className = '';
+    msg.textContent = '';
+    var before = file.size;
+    chosen = await compress(file);
+    preview.innerHTML =
+      '<img src="' + URL.createObjectURL(chosen) + '" alt="预览">' +
+      '<p>' + chosen.name + '　' + kb(before) +
+      (chosen.size < before ? ' → 压缩到 ' + kb(chosen.size) : '') + '</p>';
+  });
+
+  form.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    if (!chosen) {
+      msg.className = 'msg err';
+      msg.textContent = '请先选择一张图片。';
+      return;
+    }
+
+    var data = new FormData();
+    data.append('category', form.querySelector('input[name=category]:checked').value);
+    data.append('source', 'mobile-web');
+    data.append('file', chosen, chosen.name);
+
+    submitButton.disabled = true;
+    msg.className = '';
+    msg.textContent = '上传中…';
+
+    try {
+      // 注意：不要手动设置 Content-Type，浏览器会自动带上 multipart 边界
+      var response = await fetch(ENDPOINT, { method: 'POST', body: data });
+      var result = await response.json();
+      if (response.ok && result.ok) {
+        msg.className = 'msg ok';
+        msg.textContent = '提交成功，已保存到 ' + (result.attachments || []).join('、');
+        chosen = null;
+        fileInput.value = '';
+        preview.innerHTML = '';
+      } else {
+        msg.className = 'msg err';
+        msg.textContent = result.message || ('提交失败（' + response.status + '）');
+      }
+    } catch (err) {
+      msg.className = 'msg err';
+      msg.textContent = '网络错误：' + err.message;
+    }
+    submitButton.disabled = false;
+  });
+</script>
+</body>
+</html>

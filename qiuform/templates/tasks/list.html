@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% from "_macros.html" import mode_chip %}
+{% block title %}我的任务 · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="spread" style="margin-bottom:20px">
+  <div>
+    <h1>我的任务</h1>
+    <p class="muted small" style="margin-top:5px">
+      {{ stats.tasks }} 个任务 · 累计收到 {{ stats.submissions }} 条提交
+    </p>
+  </div>
+</div>
+
+<div class="card accent" style="margin-bottom:16px">
+  <div class="card-body tight">
+    <form method="post" action="{{ url_for('tasks.create') }}" class="create-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input class="input" name="name" required maxlength="80"
+             placeholder="新任务叫什么？例如：初二(3)班 课前小调查"
+             aria-label="任务名称">
+      <input class="input" name="description" maxlength="160"
+             placeholder="一句话说明（可空）"
+             aria-label="任务简介">
+      <button class="btn btn-primary" type="submit">
+        {{ icon('plus', 16) }} 创建任务
+      </button>
+    </form>
+  </div>
+</div>
+
+{% if tasks %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="table responsive">
+      <thead>
+        <tr>
+          <th>任务</th>
+          <th>接口编号</th>
+          <th>读写模式</th>
+          <th class="num">提交</th>
+          <th class="num">页面</th>
+          <th>创建时间</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for task in tasks %}
+        <tr>
+          <td data-label="任务" style="min-width:200px">
+            <a class="cell-lead" href="{{ url_for('tasks.overview', apiid=task.apiid) }}">
+              {{ task.name }}</a>
+            {% if task.description %}
+              <div class="muted tiny">{{ task.description }}</div>
+            {% endif %}
+          </td>
+          <td data-label="接口编号">
+            <span class="mono small muted">{{ task.apiid }}</span>
+          </td>
+          <td data-label="模式">{{ mode_chip(task.mode) }}</td>
+          <td data-label="提交" class="num">{{ task.total }}</td>
+          <td data-label="页面" class="num">{{ task.page_count }}</td>
+          <td data-label="创建" class="muted tiny nowrap">{{ task.created_at }}</td>
+          <td class="actions">
+            <a class="btn btn-sm" href="{{ url_for('tasks.overview', apiid=task.apiid) }}">
+              打开 {{ icon('arrow-right', 14) }}</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty">
+    <div class="empty-icon">{{ icon('inbox', 22) }}</div>
+    <div class="empty-title">还没有任务</div>
+    <p>在上面输入一个名字，几秒钟就能拿到接口地址。</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

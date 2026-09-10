@@ -1,0 +1,96 @@
+{% extends "tasks/_layout.html" %}
+{% from "_icons.html" import icon %}
+
+{% block tab %}
+<div class="grid side">
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>{{ icon('settings') }} 基本信息</h2></div>
+      <div class="card-body">
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="save">
+
+          <div class="field">
+            <label class="label" for="name">任务名称</label>
+            <input class="input" id="name" name="name" value="{{ task.name }}"
+                   required maxlength="80">
+          </div>
+
+          <div class="field">
+            <label class="label" for="description">
+              简介 <span class="opt">（可空）</span>
+            </label>
+            <textarea class="textarea" id="description" name="description"
+                      maxlength="160" rows="2"
+                      placeholder="一句话说明这个任务是做什么的"></textarea>
+          </div>
+
+          <div class="field">
+            <label class="label">读写模式</label>
+            <div class="radio-cards">
+              {% for key, info in modes.items() %}
+                <label class="radio-card">
+                  <input type="radio" name="mode" value="{{ key }}"
+                         {% if key == task.mode %}checked{% endif %}>
+                  <span class="radio-card-body">
+                    <span class="radio-card-title">{{ info.label }}</span>
+                    <span class="radio-card-desc">{{ info.hint }}</span>
+                  </span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <button class="btn btn-primary" type="submit">
+            {{ icon('check', 15) }} 保存设置
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <div class="card-head"><h2>{{ icon('link') }} 接口编号</h2></div>
+      <div class="card-body">
+        <div class="copybox">
+          <span class="value" id="apiid">{{ task.apiid }}</span>
+          <button class="btn btn-sm" data-copy="#apiid">
+            {{ icon('copy', 14) }}<span data-copy-label>复制</span></button>
+        </div>
+        <p class="hint">
+          接口编号是任务的公开标识，创建后固定不变 —— 二维码和已经发出去的
+          链接都依赖它。需要换地址的话，建议新建一个任务。
+        </p>
+      </div>
+    </div>
+
+    <div class="card danger">
+      <div class="card-head" style="border-color:var(--bad-line)">
+        <h2 style="color:var(--bad)">{{ icon('alert') }} 删除任务</h2>
+      </div>
+      <div class="card-body">
+        <p class="small" style="color:var(--ink-2)">
+          会一并删除这个任务的<b>全部提交记录</b>和<b>已上传的页面文件</b>，
+          无法恢复。
+        </p>
+        <form method="post" action="{{ url_for('tasks.delete_task', apiid=task.apiid) }}"
+              onsubmit="return confirm('最后确认：删除这个任务和它的全部数据？');">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="field">
+            <label class="label" for="confirm">
+              输入任务名称 <span class="mono">{{ task.name }}</span> 以确认
+            </label>
+            <input class="input" id="confirm" name="confirm" autocomplete="off"
+                   placeholder="{{ task.name }}" required>
+          </div>
+          <button class="btn btn-danger" type="submit">
+            {{ icon('trash', 15) }} 永久删除
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

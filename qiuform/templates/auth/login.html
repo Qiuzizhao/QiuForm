@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}登录 · {{ SITE_NAME }}{% endblock %}
+{% block page_class %}narrow{% endblock %}
+
+{% block content %}
+<div class="center" style="margin-bottom:24px">
+  <h1 style="font-size:1.4rem">欢迎回来</h1>
+  <p class="muted small" style="margin-top:6px">登录后继续管理你的任务</p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label class="label" for="username">用户名</label>
+        <input class="input" id="username" name="username" value="{{ username }}"
+               autocomplete="username" autofocus required>
+      </div>
+      <div class="field">
+        <label class="label" for="password">密码</label>
+        <input class="input" id="password" name="password" type="password"
+               autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" type="submit">
+        {{ icon('arrow-right', 16) }} 登录
+      </button>
+    </form>
+  </div>
+</div>
+
+<p class="muted small center" style="margin-top:18px">
+  还没有账号？<a href="{{ url_for('auth.register') }}">免费注册一个</a>
+</p>
+{% endblock %}

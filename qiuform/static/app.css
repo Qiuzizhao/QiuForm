@@ -595,24 +595,60 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 
 /* ------------------------------------------------------------ 首页 */
 
-/* 自用为主，首页不做宣传，就是一个安静入口 */
-.home-page { max-width: 620px; }
-.home { padding: 54px 0 40px; }
-.home-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
-.home-brand h1 { font-size: 1.45rem; letter-spacing: -.02em; }
-.home-lede {
-  color: var(--muted); font-size: 1rem; line-height: 1.8; margin-bottom: 24px;
-}
-.home-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 38px; }
-.home-note { border-top: 1px solid var(--line); padding-top: 26px; }
-.home-note h2 { font-size: .92rem; margin-bottom: 10px; }
-.home-note p { margin-bottom: 12px; }
+/* 自用为主，不做宣传；但要有一个视觉焦点，不能只是把字堆在左边 */
+.home-page { max-width: 900px; }
 
-/* 首页的三条能力说明：用左侧细线分组，不用卡片，保持安静 */
-.home-points { display: flex; flex-direction: column; gap: 17px; margin-top: 18px; }
-.home-point { border-left: 2px solid var(--line); padding-left: 14px; }
-.home-point h3 { font-size: .88rem; margin-bottom: 4px; }
-.home-point p { font-size: .85rem; color: var(--muted); margin: 0; line-height: 1.75; }
+.home-hero { text-align: center; padding: 56px 0 40px; }
+.home-hero h1 {
+  font-size: clamp(1.8rem, 4.6vw, 2.45rem);
+  letter-spacing: -.035em; line-height: 1.18; margin-bottom: 16px;
+}
+.home-lead {
+  font-size: 1rem; color: var(--muted); line-height: 1.78;
+  max-width: 560px; margin: 0 auto 28px;
+}
+.home-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* 数据流示意：这是首页的视觉主体 —— 写进去、读回来 */
+.home-flow {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 14px; align-items: center; margin: 4px 0 50px;
+}
+.flow-panel { min-width: 0; }
+.flow-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: 8px;
+}
+.flow-label .ico { color: var(--faint); }
+.flow-panel .code { font-size: .77rem; line-height: 1.75; padding: 14px 16px; }
+.flow-arrow { display: grid; place-items: center; color: var(--muted); }
+
+@media (max-width: 780px) {
+  .home-flow { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .flow-arrow { transform: rotate(90deg); padding: 2px 0; }
+}
+
+/* 场景网格 */
+.home-scenes-head { text-align: center; margin-bottom: 22px; }
+.home-scenes-head h2 { font-size: 1.05rem; margin-bottom: 8px; }
+.home-section-note {
+  font-size: .86rem; color: var(--muted); line-height: 1.75;
+  max-width: 48ch; margin: 0 auto;
+}
+.home-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 700px) { .home-grid { grid-template-columns: minmax(0, 1fr); } }
+.home-item {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-md); padding: 17px 19px;
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.home-item:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+.home-item h3 { font-size: .89rem; margin-bottom: 6px; letter-spacing: -.01em; }
+.home-item p { font-size: .83rem; color: var(--muted); margin: 0; line-height: 1.72; }
 
 .feature-list { margin: 0; padding-left: 19px; }
 .feature-list li { margin-bottom: 7px; font-size: .89rem; color: var(--ink-2); }

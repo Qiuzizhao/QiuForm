@@ -136,6 +136,12 @@ def main():
     print("1. 账号")
     status, html, _, _ = client.get("/register")
     check("注册页可访问", status == 200, f"status={status}")
+
+    # 静态资源要带内容哈希，否则更新部署后浏览器和 CDN 还在用旧的 css
+    _, landing, _, _ = client.get("/")
+    check("静态资源地址带版本号（更新后不会用到旧缓存）",
+          "app.css?v=" in landing and "app.js?v=" in landing)
+
     client.load_csrf("/register")
     check("注册页带 CSRF token", bool(client.csrf))
 

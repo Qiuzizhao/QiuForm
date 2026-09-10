@@ -7,6 +7,7 @@
 import os
 import secrets
 import time
+import hashlib
 from datetime import timedelta
 from pathlib import Path
 
@@ -39,6 +40,22 @@ def _load_secret(data_dir: Path) -> str:
     except OSError:
         pass
     return value
+
+
+def _asset_version(app: Flask) -> str:
+    """静态资源的版本号，取内容的哈希。
+
+    更新部署后，浏览器和 CDN 很可能还在用旧的 css / js。把内容哈希拼在
+    资源地址后面，内容一变地址就变，缓存自动失效。这个坑真踩过一次：
+    新 HTML 配旧 CSS，页面在本地正常、线上却乱了。
+    """
+    digest = hashlib.sha256()
+    static_dir = Path(app.static_folder or "")
+    for name in sorted(["app.css", "app.js"]):
+        path = static_dir / name
+        if path.is_file():
+            digest.update(path.read_bytes())
+    return digest.hexdigest()[:10]
 
 
 def create_app(config: dict = None) -> Flask:
@@ -88,6 +105,10 @@ def create_app(config: dict = None) -> Flask:
 
     db.init_app(app)
     security.init_app(app)
+
+    # 静态资源地址带版本号，就可以放心让浏览器长时间缓存
+    app.config.setdefault("SEND_FILE_MAX_AGE_DEFAULT", 60 * 60 * 24 * 30)
+    app.jinja_env.globals["ASSET_V"] = _asset_version(app)
 
     # 接口返回可读的中文，而不是 \u4e00 这种东西 ——
     # 老师会直接把这段输出复制给大模型当数据样例。

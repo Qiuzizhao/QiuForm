@@ -425,3 +425,56 @@ def render_data_uri(data: str, **kwargs) -> str:
     from urllib.parse import quote
     svg = render_svg(data, **kwargs)
     return "data:image/svg+xml;charset=utf-8," + quote(svg)
+
+
+def render_pair_svg(items, *, scale: int = 6, gap: int = 56, margin: int = 26,
+                    label_gap: int = 18, label_size: int = None,
+                    dark: str = "#141821", light: str = "#ffffff") -> str:
+    """把多个二维码并排画进同一张 SVG，每个下面带一行文字标签。
+
+    items: [(数据, 标签), ...]，通常是学生端和教师端两个地址。
+    这样"下载二维码"一个文件就能把两个都带走，直接打印也行。
+    """
+    blocks = []
+    for data, label in items:
+        matrix = build_matrix(data)
+        size = len(matrix)
+        px = size * scale
+        rects = "".join(
+            f'<rect x="{c * scale}" y="{r * scale}"'
+            f' width="{scale}" height="{scale}"/>'
+            for r, row in enumerate(matrix)
+            for c, value in enumerate(row) if value
+        )
+        blocks.append((px, rects, label))
+
+    qr_w = max(b[0] for b in blocks)
+    font = label_size or max(18, int(qr_w * 0.12))
+    label_h = font + 6
+    width = margin * 2 + qr_w * len(blocks) + gap * (len(blocks) - 1)
+    height = margin * 2 + qr_w + label_gap + label_h
+
+    font_family = ('-apple-system, "PingFang SC", "Microsoft YaHei", '
+                   '"Segoe UI", sans-serif')
+    parts = []
+    for i, (px, rects, label) in enumerate(blocks):
+        x = margin + i * (qr_w + gap) + (qr_w - px) / 2
+        y = margin
+        parts.append(f'<g transform="translate({x:g} {y:g})">'
+                     f'<g fill="{html.escape(dark)}">{rects}</g></g>')
+        parts.append(
+            f'<text x="{x + px / 2:g}" y="{y + qr_w + label_gap + font:g}"'
+            f' text-anchor="middle" font-size="{font}" fill="#12161f"'
+            f' font-family="{html.escape(font_family, quote=True)}">'
+            f'{html.escape(label)}</text>'
+        )
+
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}"'
+        f' width="{width}" height="{height}" shape-rendering="crispEdges"'
+        f' role="img"'
+        f' aria-label="二维码">'
+        f'<rect width="{width}" height="{height}" fill="{html.escape(light)}"/>'
+        + "".join(parts)
+        + "</svg>"
+    )

@@ -60,13 +60,16 @@ def overview(apiid: str):
     recent = db.list_submissions(apiid, limit=5)
     pages = db.list_pages(apiid)
     teacher_page = db.role_page(apiid, "teacher")
+    teacher_url = (f"{urls['page']}{quote(teacher_page['filename'])}"
+                   if teacher_page else "")
     return render_template(
         "tasks/overview.html", task=task, urls=urls, total=total,
         recent=recent, pages=pages, page_count=len(pages), tab="overview",
         teacher_page=teacher_page,
-        teacher_url=(f"{urls['page']}{quote(teacher_page['filename'])}"
-                     if teacher_page else ""),
+        teacher_url=teacher_url,
         qr_svg=qrcode_gen.render_svg(urls["page"], scale=5),
+        qr_teacher_svg=(qrcode_gen.render_svg(teacher_url, scale=5)
+                        if teacher_url else ""),
         upload_max_mb=current_app.config["MAX_UPLOAD_BYTES"] // 1024 // 1024,
         upload_exts=sorted(ext.lstrip(".") for ext in storage.ALLOWED_UPLOAD_EXT),
     )
@@ -321,8 +324,19 @@ def qr_svg(apiid: str):
     _owned_or_404(apiid)
     which = request.args.get("target", "page")
     urls = _task_urls(apiid)
-    data = urls["page"] if which == "page" else urls["api"]
-    svg = qrcode_gen.render_svg(data, scale=8)
     from flask import Response
+
+    if which == "both":
+        # 学生端 + 教师端一起下载，一张图两个码
+        items = [(urls["page"], "学生端")]
+        teacher = db.role_page(apiid, "teacher")
+        if teacher:
+            items.append((urls["page"] + quote(teacher["filename"]), "教师端"))
+        svg = (qrcode_gen.render_pair_svg(items, scale=8) if len(items) > 1
+               else qrcode_gen.render_svg(items[0][0], scale=8))
+    else:
+        data = urls["page"] if which == "page" else urls["api"]
+        svg = qrcode_gen.render_svg(data, scale=8)
+
     return Response(svg, mimetype="image/svg+xml",
                     headers={"Cache-Control": "no-store"})

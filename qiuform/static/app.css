@@ -473,11 +473,25 @@ code, pre, .mono {
 /* ------------------------------------------------------------ 二维码 */
 
 .qr-box { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.qr-pair {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px; margin-bottom: 18px;
+}
+.qr-item { margin: 0; text-align: center; }
+.qr-item figcaption {
+  margin-top: 8px; font-size: .8rem; font-weight: 620; color: var(--ink-2);
+}
+.qr-copy { align-items: flex-start; }
+.qr-pair .qr-frame { width: 100%; display: grid; place-items: center; }
+.qr-pair .qr-frame svg { width: 100%; max-width: 150px; height: auto; }
 .qr-frame {
   background: #fff; border: 1px solid var(--line); border-radius: var(--r-md);
   padding: 12px; line-height: 0; box-shadow: var(--shadow-xs); flex: none;
 }
 .qr-frame svg { width: 150px; height: 150px; display: block; }
+@media (max-width: 420px) {
+  .qr-pair { grid-template-columns: minmax(0, 1fr); }
+}
 
 /* ------------------------------------------------------------ 统计 */
 

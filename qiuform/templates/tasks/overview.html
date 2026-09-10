@@ -166,8 +166,20 @@ curl -X POST {{ urls.api }} -F "category=橡皮" -F "file=@photo.jpg"</pre>
       <div class="card-head"><h2>{{ icon('qr') }} 扫码打开</h2></div>
       <div class="card-body">
         {% if page_count %}
-          <div class="qr-box">
-            <div class="qr-frame">{{ qr_svg | safe }}</div>
+          <div class="qr-pair">
+            <figure class="qr-item">
+              <div class="qr-frame">{{ qr_svg | safe }}</div>
+              <figcaption>学生端</figcaption>
+            </figure>
+            {% if qr_teacher_svg %}
+            <figure class="qr-item">
+              <div class="qr-frame">{{ qr_teacher_svg | safe }}</div>
+              <figcaption>教师端</figcaption>
+            </figure>
+            {% endif %}
+          </div>
+
+          <div class="qr-box qr-copy">
             <div class="grow">
               <p class="small muted">学生扫一下就能打开任务页面。</p>
               <div class="copybox wrap" style="margin-top:10px">
@@ -184,7 +196,8 @@ curl -X POST {{ urls.api }} -F "category=橡皮" -F "file=@photo.jpg"</pre>
               </div>
               {% endif %}
               <a class="btn btn-sm btn-ghost" style="margin-top:10px"
-                 href="{{ url_for('tasks.qr_svg', apiid=task.apiid) }}"
+                 href="{{ url_for('tasks.qr_svg', apiid=task.apiid,
+                                  target=('both' if teacher_url else 'page')) }}"
                  download="qform-{{ task.apiid }}.svg">
                 {{ icon('download', 14) }} 下载二维码
               </a>

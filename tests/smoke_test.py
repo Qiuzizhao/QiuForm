@@ -382,6 +382,18 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
           "学生端" in home and "教师端" in home
           and f"/p/{apiid}/teacher.html" in home, f"status={status}")
 
+    status, page, _, _ = client.get(f"/tasks/{apiid}")
+    check("概览页并排显示两个二维码",
+          status == 200 and page.count('class="qr-frame"') == 2
+          and page.count('class="qr-item"') == 2, f"status={status}")
+
+    status, svg, _, _ = client.raw("GET", f"/tasks/{apiid}/qr.svg?target=both")
+    check("一次下载两个二维码",
+          status == 200 and svg.startswith(b"<svg")
+          and svg.count(b"<rect") > 100
+          and "学生端".encode("utf-8") in svg and "教师端".encode("utf-8") in svg,
+          f"status={status}")
+
     # 配套资源
     client.load_csrf(f"/tasks/{apiid}/pages")
     status, html, _, _ = client.post(

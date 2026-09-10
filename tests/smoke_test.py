@@ -387,6 +387,17 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
           status == 200 and page.count('class="qr-frame"') == 2
           and page.count('class="qr-item"') == 2, f"status={status}")
 
+    # 设置页得把已填的简介回填，否则保存一次就被清空
+    client.load_csrf(f"/tasks/{apiid}/settings")
+    client.post_form(f"/tasks/{apiid}/settings",
+                     {"action": "save", "name": "初二(3)班 课前小调查",
+                      "description": "这是一句简介", "mode": "read_write"})
+    status, settings, _, _ = client.get(f"/tasks/{apiid}/settings")
+    check("设置页会回填简介",
+          status == 200 and re.search(
+              r'id="description"[^>]*>\s*这是一句简介', settings) is not None,
+          f"status={status}")
+
     status, svg, _, _ = client.raw("GET", f"/tasks/{apiid}/qr.svg?target=both")
     check("一次下载两个二维码",
           status == 200 and svg.startswith(b"<svg")

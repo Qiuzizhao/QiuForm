@@ -1,37 +1,6 @@
 (function () {
   'use strict';
 
-  /* ---------------------------------------------------------- 主题切换 */
-
-  var root = document.documentElement;
-
-  function isDark() {
-    return root.getAttribute('data-theme') === 'dark';
-  }
-
-  function paintThemeIcon() {
-    var dark = isDark();
-    document.querySelectorAll('[data-theme-icon]').forEach(function (node) {
-      // 显示的是"点了会切到哪个模式"：亮色时显示月亮，暗色时显示太阳
-      node.hidden = (node.getAttribute('data-theme-icon') === 'light') !== dark;
-    });
-  }
-
-  document.addEventListener('click', function (event) {
-    var button = event.target.closest('[data-theme-toggle]');
-    if (!button) return;
-    var next = isDark() ? 'light' : 'dark';
-    if (next === 'dark') {
-      root.setAttribute('data-theme', 'dark');
-    } else {
-      root.removeAttribute('data-theme');
-    }
-    try { localStorage.setItem('qf-theme', next); } catch (err) { /* 忽略 */ }
-    paintThemeIcon();
-  });
-
-  paintThemeIcon();
-
   /* ---------------------------------------------------------- 复制 */
 
   function fallbackCopy(text, done) {

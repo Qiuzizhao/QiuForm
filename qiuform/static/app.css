@@ -1,6 +1,6 @@
 /* ==========================================================================
    QiuForm 设计系统
-   颜色、间距、圆角、阴影都走变量；亮色 / 暗色两套主题。
+   颜色、间距、圆角、阴影都走变量，改配色只动下面这一处。
    ========================================================================== */
 
 :root {
@@ -49,46 +49,6 @@
   --nav-h: 60px;
   --maxw: 1100px;
   --ring: 0 0 0 3px rgba(61, 90, 254, .18);
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-
-  --bg:          #0d0f16;
-  --bg-soft:     #12151e;
-  --surface:     #161a24;
-  --surface-2:   #1a1f2b;
-  --surface-3:   #1f2532;
-  --line:        #262d3d;
-  --line-strong: #333c50;
-
-  --ink:   #eef1f8;
-  --ink-2: #c3cadd;
-  --muted: #8b93a8;
-  --faint: #5e677d;
-
-  --accent:      #7b8dff;
-  --accent-2:    #97a5ff;
-  --accent-soft: #1b2138;
-  --accent-line: #313b63;
-  --on-accent:   #0d0f16;
-
-  --good:      #43c58d;
-  --good-soft: #10261e;
-  --good-line: #1e4a38;
-  --warn:      #e0a355;
-  --warn-soft: #2a2013;
-  --warn-line: #4d3a1d;
-  --bad:       #f08080;
-  --bad-soft:  #2b1616;
-  --bad-line:  #52292a;
-
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .4);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, .45), 0 1px 2px rgba(0, 0, 0, .3);
-  --shadow-md: 0 6px 20px -8px rgba(0, 0, 0, .6);
-  --shadow-lg: 0 24px 56px -24px rgba(0, 0, 0, .8);
-
-  --ring: 0 0 0 3px rgba(123, 141, 255, .28);
 }
 
 /* ------------------------------------------------------------ 基础 */
@@ -175,14 +135,6 @@ code, pre, .mono {
 .nav-link:hover { background: var(--surface-3); color: var(--ink); text-decoration: none; }
 .nav-link.active { background: var(--accent-soft); color: var(--accent); }
 .nav-sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
-
-.icon-btn {
-  display: inline-grid; place-items: center;
-  width: 34px; height: 34px; border-radius: var(--r-sm);
-  border: 1px solid transparent; background: transparent;
-  color: var(--ink-2); cursor: pointer; transition: background .12s, color .12s;
-}
-.icon-btn:hover { background: var(--surface-3); color: var(--ink); }
 
 .inline { display: inline; }
 .linkish {

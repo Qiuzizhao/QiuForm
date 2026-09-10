@@ -8,17 +8,6 @@
 <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v={{ ASSET_V }}">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%233d5afe'/><text x='16' y='23' font-size='19' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>Q</text></svg>">
-<script>
-/* 在首屏绘制之前定好主题，避免闪一下白 */
-(function () {
-  try {
-    var saved = localStorage.getItem('qf-theme');
-    var dark = saved ? saved === 'dark'
-                     : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (dark) document.documentElement.setAttribute('data-theme', 'dark');
-  } catch (err) { /* 隐私模式下 localStorage 可能不可用 */ }
-})();
-</script>
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -44,12 +33,6 @@
         <a class="btn btn-sm btn-primary" href="{{ url_for('auth.register') }}">注册</a>
         <span class="nav-sep"></span>
       {% endif %}
-
-      <button class="icon-btn" type="button" data-theme-toggle
-              title="切换深色 / 浅色" aria-label="切换深色或浅色主题">
-        <span data-theme-icon="light" hidden>{{ icon('sun', 17) }}</span>
-        <span data-theme-icon="dark">{{ icon('moon', 17) }}</span>
-      </button>
 
       {% if current_user %}
         <form class="inline" method="post" action="{{ url_for('auth.logout') }}">

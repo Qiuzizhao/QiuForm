@@ -18,7 +18,6 @@
         <input class="input" id="username" name="username" value="{{ form.username }}"
                autocomplete="username" autofocus required maxlength="24"
                placeholder="例：谢老师">
-        <p class="hint">2~24 个字符，中英文、数字、下划线、点、短横线都可以。</p>
       </div>
       {{ password_field('password', '密码', autocomplete='new-password',
                         placeholder='至少 6 位', minlength=6) }}

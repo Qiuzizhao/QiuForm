@@ -4,6 +4,17 @@
   {%- if ext in ['jpg','jpeg','png','gif','webp','bmp','svg','avif','ico'] -%}
     <a href="{{ url }}" data-lightbox title="{{ name }}（点击放大）">
       <img class="thumb" src="{{ url }}" alt="{{ name }}" loading="lazy"></a>
+  {%- elif ext in ['mp3','wav','m4a','ogg','oga','aac','flac','opus','webm','weba'] -%}
+    {# 音频直接在这里放，不用点开新页面 #}
+    <span class="play-cell">
+      <audio controls preload="metadata" src="{{ url }}"></audio>
+      <a class="play-name" href="{{ url }}" target="_blank" title="{{ name }}">🎧 {{ name }}</a>
+    </span>
+  {%- elif ext in ['mp4','mov'] -%}
+    <span class="play-cell">
+      <video controls preload="metadata" src="{{ url }}"></video>
+      <a class="play-name" href="{{ url }}" target="_blank" title="{{ name }}">🎬 {{ name }}</a>
+    </span>
   {%- else -%}
     <a class="filechip" href="{{ url }}" target="_blank">📎 {{ name }}</a>
   {%- endif -%}

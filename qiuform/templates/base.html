@@ -82,11 +82,6 @@
   {% block content %}{% endblock %}
 </main>
 
-<footer class="foot">
-  <span>{{ SITE_NAME }} · 一个任务 = 一个可读写的接口地址</span>
-  <span>数据请自行备份，勿用于收集敏感信息</span>
-</footer>
-
 {% block scripts %}{% endblock %}
 <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </body>

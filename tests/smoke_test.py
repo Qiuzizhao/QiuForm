@@ -382,6 +382,13 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
     status, _, _, _ = client.raw("GET", f"/p/{apiid}/index.html")
     check("删除后页面也不再对外服务", status == 404, f"status={status}")
 
+    print("\n10. 退出登录")
+    client.load_csrf("/")
+    status, html, url, _ = client.post_form("/logout", {})
+    check("退出后回到首页（不是停在登录页）",
+          url.rstrip("/") == BASE.rstrip("/"), f"url={url}")
+    check("首页给出登录和注册入口", "登录" in html and "注册" in html)
+
     print(f"\n结果：{passed} 项通过，{failed} 项失败\n")
     return 1 if failed else 0
 

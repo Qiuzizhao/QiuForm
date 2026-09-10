@@ -198,13 +198,6 @@ code, pre, .mono {
 .page { max-width: var(--maxw); margin: 0 auto; padding: 30px 20px 80px; }
 .page.narrow { max-width: 480px; padding-top: 54px; }
 
-.foot {
-  max-width: var(--maxw); margin: 0 auto; padding: 20px 20px 36px;
-  color: var(--faint); font-size: .79rem;
-  border-top: 1px solid var(--line);
-  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-}
-
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .stack.dense { gap: 10px; }
 .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

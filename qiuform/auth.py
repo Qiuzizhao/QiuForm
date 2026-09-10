@@ -78,7 +78,8 @@ def login():
 def logout():
     security.logout_user()
     flash("已退出登录。", "success")
-    return redirect(url_for("auth.login"))
+    # 回首页（未登录时首页就是那个极简入口），而不是停在登录页
+    return redirect(url_for("tasks.index"))
 
 
 @bp.route("/account", methods=["GET", "POST"])

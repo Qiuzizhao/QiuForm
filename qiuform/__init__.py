@@ -11,7 +11,7 @@ import hashlib
 from datetime import timedelta
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, current_app, jsonify, render_template, request
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from . import db, security
@@ -106,7 +106,8 @@ def create_app(config: dict = None) -> Flask:
     db.init_app(app)
     security.init_app(app)
 
-    app.jinja_env.globals["ASSET_V"] = _asset_version(app)
+    app.config["ASSET_V"] = _asset_version(app)
+    app.jinja_env.globals["ASSET_V"] = app.config["ASSET_V"]
 
     # 接口返回可读的中文，而不是 \u4e00 这种东西 ——
     # 老师会直接把这段输出复制给大模型当数据样例。
@@ -149,6 +150,24 @@ def create_app(config: dict = None) -> Flask:
                 html = (response.mimetype or "").startswith("text/html")
                 response.headers["Cache-Control"] = (
                     "public, max-age=60" if html else "public, max-age=3600")
+        return response
+
+    @app.after_request
+    def early_hints(response):
+        """HTML 响应带上 preload 提示，Cloudflare 会转成 103 Early Hints 先发给浏览器。
+
+        HTML 首字节要等一个往返（经 Cloudflare 约 130~260ms），这期间浏览器
+        本来只能干等；有了 103，它可以在我们回主体的同时就开始下 CSS/JS。
+        只给站内页面加 —— 任务页面（/p/）是独立页面，不需要这两个文件。
+        """
+        if (response.status_code == 200
+                and (response.mimetype or "").startswith("text/html")
+                and not request.path.startswith(("/p/", "/files/"))):
+            v = current_app.config["ASSET_V"]
+            response.headers["Link"] = (
+                f"</static/app.css?v={v}>; rel=preload; as=style, "
+                f"</static/app.js?v={v}>; rel=preload; as=script"
+            )
         return response
 
     @app.errorhandler(400)

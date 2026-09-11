@@ -731,15 +731,17 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: none; }
 }
-.lp-hero > * { animation: lp-rise .7s cubic-bezier(.22, 1, .36, 1) both; }
-.lp-hero > h1      { animation-delay: .06s; }
-.lp-hero > .lp-sub { animation-delay: .14s; }
-.lp-hero > .lp-cta { animation-delay: .22s; }
+/* 入场动画压短：原来延迟 0.06~0.22s、时长 0.7s，首屏文字要 0.9s 才完全显形，
+   现在 0.5s 内到位 —— 动画是给"有变化"的感觉，不该拖慢内容出现 */
+.lp-hero > * { animation: lp-rise .42s cubic-bezier(.22, 1, .36, 1) both; }
+.lp-hero > h1      { animation-delay: .02s; }
+.lp-hero > .lp-sub { animation-delay: .05s; }
+.lp-hero > .lp-cta { animation-delay: .09s; }
 
 /* ------------------------------------------------------- 产品示意窗口 */
 
 /* 产品示意是首页最后一块，下边距交给 .page 自己的 padding */
-.lp-showcase { margin-bottom: 0; animation: lp-rise .8s cubic-bezier(.22, 1, .36, 1) .3s both; }
+.lp-showcase { margin-bottom: 0; animation: lp-rise .46s cubic-bezier(.22, 1, .36, 1) .12s both; }
 .lp-window {
   background: var(--surface); border: 1px solid var(--line-strong);
   border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg);

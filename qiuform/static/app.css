@@ -254,7 +254,8 @@ code, pre, .mono {
 .card-body.tight { padding: 16px 22px; }
 .card.dashed { border-style: dashed; background: var(--surface-2); }
 .card.accent { border-color: var(--accent-line); }
-.card.danger { border-color: var(--bad-line); background: var(--bad-soft); }
+/* 只有标题栏是红的，正文保持白底，读起来更清楚 */
+.card.danger { border-color: var(--bad-line); background: var(--surface); }
 
 /* ------------------------------------------------------------ 按钮 */
 

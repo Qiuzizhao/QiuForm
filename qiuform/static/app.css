@@ -47,7 +47,7 @@
   --r-full: 999px;
 
   --nav-h: 60px;
-  --maxw: 1100px;
+  --maxw: 1440px;
   --ring: 0 0 0 3px rgba(61, 90, 254, .18);
 }
 
@@ -110,7 +110,7 @@ code, pre, .mono {
   border-bottom: 1px solid var(--line);
 }
 .nav-inner {
-  max-width: var(--maxw); margin: 0 auto; padding: 0 20px;
+  max-width: var(--maxw); margin: 0 auto; padding: 0 24px;
   height: var(--nav-h);
   display: flex; align-items: center; justify-content: space-between; gap: 14px;
 }
@@ -147,7 +147,7 @@ code, pre, .mono {
 
 /* ------------------------------------------------------------ 布局 */
 
-.page { max-width: var(--maxw); margin: 0 auto; padding: 30px 20px 80px; }
+.page { max-width: var(--maxw); margin: 0 auto; padding: 30px 24px 80px; }
 .page.narrow { max-width: 480px; padding-top: 54px; }
 
 .stack { display: flex; flex-direction: column; gap: 16px; }
@@ -639,7 +639,7 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
    统一用 lp- 前缀，和后台页面那套样式分开，互不影响
    ========================================================================== */
 
-.home-page { max-width: 1080px; }
+.home-page { max-width: 1280px; }
 
 /* ------------------------------------------------------------ Hero */
 

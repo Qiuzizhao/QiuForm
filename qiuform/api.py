@@ -5,7 +5,7 @@
     GET  /api/<apiid>/all    读出全部
 
 地址不鉴权、不加密，谁拿到都能读写——这是为了换取"任何网页、任何大模型
-生成的代码，接上就能用"。风险由任务的读写模式来兜底。
+生成的代码，接上就能用"。所以别把敏感信息往这里放。
 """
 
 import json
@@ -47,9 +47,10 @@ def _task_brief(task: dict) -> dict:
     brief = {
         "id": task["apiid"],
         "name": task["name"],
-        "mode": task["mode"],
-        "readable": db.can_read(task["mode"]),
-        "writable": db.can_write(task["mode"]),
+        # 任务一律可读可写；这两个字段保留是为了不破坏已经接好的页面
+        "mode": "read_write",
+        "readable": True,
+        "writable": True,
     }
     page = db.primary_page(task["apiid"])
     if page:
@@ -101,9 +102,6 @@ def submit(apiid: str):
     task = db.get_task(apiid)
     if not task:
         return _fail(404, "task_not_found", "任务不存在")
-    if not db.can_write(task["mode"]):
-        return _fail(403, "read_only",
-                     f"该任务当前是「{db.mode_label(task['mode'])}」，不接受新的提交")
 
     content_type = request.headers.get("Content-Type", "")
     uploaded: list = []
@@ -171,9 +169,6 @@ def read_all(apiid: str):
     task = db.get_task(apiid)
     if not task:
         return _fail(404, "task_not_found", "任务不存在")
-    if not db.can_read(task["mode"]):
-        return _fail(403, "write_only",
-                     f"该任务当前是「{db.mode_label(task['mode'])}」，不允许读取")
 
     wait = _read_gate_check(apiid)
     if wait:
@@ -186,9 +181,6 @@ def _read(apiid: str, limit, full: bool):
     task = db.get_task(apiid)
     if not task:
         return _fail(404, "task_not_found", "任务不存在")
-    if not db.can_read(task["mode"]):
-        return _fail(403, "write_only",
-                     f"该任务当前是「{db.mode_label(task['mode'])}」，不允许读取")
 
     total = db.count_submissions(apiid)
     rows = db.list_submissions(apiid, limit=limit)

@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
-{% from "_macros.html" import mode_chip %}
 
 {% block title %}{{ task.name }} · {{ SITE_NAME }}{% endblock %}
 
@@ -15,7 +14,6 @@
     </div>
   </div>
   <div class="row tight">
-    {{ mode_chip(task.mode) }}
     {% if page_count %}
       <a class="btn btn-sm" href="{{ urls.page }}" target="_blank">
         {{ icon('external', 14) }} 打开页面</a>

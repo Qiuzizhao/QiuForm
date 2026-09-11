@@ -124,8 +124,6 @@ def create_app(config: dict = None) -> Flask:
 
     app.jinja_env.filters["human_size"] = human_size
     app.jinja_env.globals["SITE_NAME"] = "QForm"
-    app.jinja_env.globals["mode_label"] = db.mode_label
-    app.jinja_env.globals["MODES"] = db.MODES
     # 模板里也要用对外地址，不能直接拿 request.host_url ——
     # 反向代理之后那是内网的 http 地址
     from .urls import base_url

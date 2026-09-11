@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     owner_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name        TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
+    -- 历史遗留列：早期可以切换"只读 / 只写"，现在任务一律可读可写，留着兼容旧库
     mode        TEXT NOT NULL DEFAULT 'read_write',
     created_at  TEXT NOT NULL
 );
@@ -50,51 +51,6 @@ CREATE TABLE IF NOT EXISTS submissions (
 );
 CREATE INDEX IF NOT EXISTS idx_sub_apiid ON submissions (apiid, id DESC);
 """
-
-# 任务的读写模式。第一位可读，第二位可写。
-MODES = {
-    "read_write": {
-        "label": "可读可写",
-        "short": "读写",
-        "read": True,
-        "write": True,
-        "hint": "默认。既能收数据，也能让页面把数据读回去做实时统计。",
-    },
-    "read_only": {
-        "label": "只读",
-        "short": "只读",
-        "read": True,
-        "write": False,
-        "hint": "数据收完了，但还要继续展示。此时接口不再接受新的提交。",
-    },
-    "write_only": {
-        "label": "只写",
-        "short": "只写",
-        "read": False,
-        "write": True,
-        "hint": "适合问卷这类场景：能提交，但读不到别人提交的内容。",
-    },
-    "closed": {
-        "label": "已关闭",
-        "short": "关闭",
-        "read": False,
-        "write": False,
-        "hint": "读写全部拒绝。不再使用的任务建议关掉。",
-    },
-}
-
-
-def can_read(mode: str) -> bool:
-    return bool(MODES.get(mode, {}).get("read"))
-
-
-def can_write(mode: str) -> bool:
-    return bool(MODES.get(mode, {}).get("write"))
-
-
-def mode_label(mode: str) -> str:
-    return MODES.get(mode, {}).get("label", "未知")
-
 
 # ---------------------------------------------------------------- 连接
 
@@ -236,28 +192,14 @@ def list_tasks(user_id: int) -> list:
     return [dict(r) for r in rows]
 
 
-def update_task(apiid: str, user_id: int, name: str, description: str, mode: str) -> bool:
-    if mode not in MODES:
-        return False
+def update_task(apiid: str, user_id: int, name: str, description: str) -> bool:
     conn = get_db()
     with conn:
         cur = conn.execute(
-            "UPDATE tasks SET name = ?, description = ?, mode = ?"
+            "UPDATE tasks SET name = ?, description = ?"
             " WHERE apiid = ? AND owner_id = ?",
             ((name or "").strip() or "未命名任务",
-             (description or "").strip(), mode, apiid, user_id),
-        )
-    return cur.rowcount > 0
-
-
-def set_task_mode(apiid: str, user_id: int, mode: str) -> bool:
-    if mode not in MODES:
-        return False
-    conn = get_db()
-    with conn:
-        cur = conn.execute(
-            "UPDATE tasks SET mode = ? WHERE apiid = ? AND owner_id = ?",
-            (mode, apiid, user_id),
+             (description or "").strip(), apiid, user_id),
         )
     return cur.rowcount > 0
 

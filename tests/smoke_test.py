@@ -511,28 +511,26 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
     check("JSON 导出成功", status == 200 and exported["total"] == 8,
           f"status={status} total={exported.get('total')}")
 
-    # ---------------------------------------------------------- 读写模式
-    print("\n7. 读写模式")
+    # -------------------------------------------------- 任务始终可读可写
+    print("\n7. 接口始终可读可写")
+    status, settings_html, _, _ = client.get(f"/tasks/{apiid}/settings")
+    check("设置页不再有读写模式", "读写模式" not in settings_html
+          and 'name="mode"' not in settings_html, settings_html[:0])
     client.load_csrf(f"/tasks/{apiid}/settings")
-    client.post_form(f"/tasks/{apiid}/settings", {"action": "mode",
-                                                  "mode": "write_only"})
+    client.post_form(f"/tasks/{apiid}/settings",
+                     {"action": "save", "name": "初二(3)班 课前小调查",
+                      "description": "这是一句简介"})
+    status, raw, _, _ = client.raw(
+        "POST", f"/api/{apiid}", body=b'{"x":1}',
+        headers={"Content-Type": "application/json"})
+    check("任务始终可写", status == 200, f"status={status}")
     status, raw, _, _ = client.get(f"/api/{apiid}/all")
-    check("切到「只写」后读取被拒绝（403）", status == 403, f"status={status}")
-    status, raw, _, _ = client.raw(
-        "POST", f"/api/{apiid}", body=b'{"x":1}',
-        headers={"Content-Type": "application/json"})
-    check("切到「只写」后仍可提交", status == 200, f"status={status}")
-
-    client.load_csrf(f"/tasks/{apiid}/settings")
-    client.post_form(f"/tasks/{apiid}/settings", {"action": "mode",
-                                                  "mode": "read_only"})
-    status, raw, _, _ = client.raw(
-        "POST", f"/api/{apiid}", body=b'{"x":1}',
-        headers={"Content-Type": "application/json"})
-    check("切到「只读」后提交被拒绝（403）", status == 403, f"status={status}")
-
-    client.post_form(f"/tasks/{apiid}/settings", {"action": "mode",
-                                                  "mode": "read_write"})
+    check("任务始终可读", status == 200 and json.loads(raw)["total"] > 0,
+          f"status={status}")
+    brief = json.loads(raw)["task"]
+    check("接口里 mode 字段保留且为 read_write",
+          brief.get("mode") == "read_write" and brief.get("readable") is True
+          and brief.get("writable") is True, str(brief))
 
     # ---------------------------------------------------------- 安全
     print("\n8. 安全与权限")
@@ -543,7 +541,7 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
           f"status={status}")
 
     status, raw, _, _ = client.post(f"/tasks/{apiid}/settings",
-                                    {"action": "mode", "mode": "closed"})
+                                    {"action": "save", "name": "偷偷改名"})
     check("网页表单缺 CSRF 被拒绝（400）", status == 400, f"status={status}")
 
     other = Client()

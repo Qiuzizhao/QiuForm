@@ -1,6 +1,5 @@
 {% extends "base.html" %}
 {% from "_icons.html" import icon %}
-{% from "_macros.html" import mode_chip %}
 {% block title %}我的任务 · {{ SITE_NAME }}{% endblock %}
 
 {% block content %}
@@ -38,7 +37,6 @@
         <tr>
           <th>任务</th>
           <th>接口编号</th>
-          <th>读写模式</th>
           <th class="num">提交</th>
           <th class="num">页面</th>
           <th>创建时间</th>
@@ -58,7 +56,6 @@
           <td data-label="接口编号">
             <span class="mono small muted">{{ task.apiid }}</span>
           </td>
-          <td data-label="模式">{{ mode_chip(task.mode) }}</td>
           <td data-label="提交" class="num">{{ task.total }}</td>
           <td data-label="页面" class="num">{{ task.page_count }}</td>
           <td data-label="创建" class="muted tiny nowrap">{{ task.created_at }}</td>

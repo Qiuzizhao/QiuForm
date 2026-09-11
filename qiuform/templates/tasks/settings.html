@@ -26,22 +26,6 @@
                       placeholder="一句话说明这个任务是做什么的">{{ task.description }}</textarea>
           </div>
 
-          <div class="field">
-            <label class="label">读写模式</label>
-            <div class="radio-cards">
-              {% for key, info in modes.items() %}
-                <label class="radio-card">
-                  <input type="radio" name="mode" value="{{ key }}"
-                         {% if key == task.mode %}checked{% endif %}>
-                  <span class="radio-card-body">
-                    <span class="radio-card-title">{{ info.label }}</span>
-                    <span class="radio-card-desc">{{ info.hint }}</span>
-                  </span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-
           <button class="btn btn-primary" type="submit">
             {{ icon('check', 15) }} 保存设置
           </button>

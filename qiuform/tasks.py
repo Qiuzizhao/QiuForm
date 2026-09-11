@@ -264,7 +264,7 @@ def export_json(apiid: str):
     rows = db.list_submissions(apiid)
     payload = {
         "task": {"id": apiid, "name": task["name"],
-                 "description": task["description"], "mode": task["mode"]},
+                 "description": task["description"]},
         "exported_from": base_url(),
         "total": len(rows),
         "submissions": [{"_id": r["id"], "_at": r["at"], **r["data"]} for r in rows],
@@ -290,7 +290,7 @@ def settings(apiid: str):
     task = _owned_or_404(apiid)
     return render_template(
         "tasks/settings.html", task=task, urls=_task_urls(apiid), tab="settings",
-        modes=db.MODES, page_count=len(db.list_pages(apiid)),
+        page_count=len(db.list_pages(apiid)),
     )
 
 
@@ -298,22 +298,12 @@ def settings(apiid: str):
 @security.login_required
 def save_settings(apiid: str):
     _owned_or_404(apiid)
-    action = request.form.get("action", "save")
-
-    if action == "mode":
-        mode = request.form.get("mode") or ""
-        if db.set_task_mode(apiid, g.user["id"], mode):
-            flash(f"读写模式已切换为「{db.mode_label(mode)}」。", "success")
-        else:
-            flash("读写模式不合法。", "error")
+    name = request.form.get("name") or ""
+    description = request.form.get("description") or ""
+    if db.update_task(apiid, g.user["id"], name, description):
+        flash("设置已保存。", "success")
     else:
-        name = request.form.get("name") or ""
-        description = request.form.get("description") or ""
-        mode = request.form.get("mode") or "read_write"
-        if db.update_task(apiid, g.user["id"], name, description, mode):
-            flash("设置已保存。", "success")
-        else:
-            flash("保存失败。", "error")
+        flash("保存失败。", "error")
     return redirect(url_for("tasks.settings", apiid=apiid))
 
 

@@ -86,10 +86,17 @@ def create_app(config: dict = None) -> Flask:
         MAX_PAGE_BYTES=4 * 1024 * 1024,       # 单个网页文件
         MAX_UPLOAD_BYTES=8 * 1024 * 1024,     # 接口收到的单个附件
         API_DEFAULT_LIMIT=3,                  # 不带 /all 时返回几条
-        # 读取限流：允许突发 N 次，之后每秒补充 R 次（按 任务+客户端IP 计）
-        # 放宽到能撑住"一个班同时刷新看板"，同时拦住写死循环的刷新
-        API_READ_BURST=float(os.environ.get("QIUFORM_READ_BURST", "20")),
-        API_READ_RATE=float(os.environ.get("QIUFORM_READ_RATE", "5")),
+        # 读取限流：允许突发 N 次，之后每秒补充 R 次（按 任务+IP 计）
+        # 实测：老师一台机器 5 秒轮询一次 ≈ 0.2 次/秒；但一个班 50 台设备
+        # 在同一个学校出口 IP 后面同时读，20 的突发会挡掉一半人。
+        # 现在突发 120（够 50 台设备各读两次）、每秒补 20，
+        # 仍然拦得住"单台设备写死循环刷新"这种滥用。
+        API_READ_BURST=float(os.environ.get("QIUFORM_READ_BURST", "120")),
+        API_READ_RATE=float(os.environ.get("QIUFORM_READ_RATE", "20")),
+        # /count 只是一次 COUNT、几百字节，单独给一个很宽的桶，
+        # 别让它跟 /all 抢额度（看板轮询走的正是 /count）
+        API_COUNT_BURST=float(os.environ.get("QIUFORM_COUNT_BURST", "600")),
+        API_COUNT_RATE=float(os.environ.get("QIUFORM_COUNT_RATE", "120")),
     )
     if config:
         app.config.update(config)

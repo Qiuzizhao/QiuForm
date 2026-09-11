@@ -319,11 +319,22 @@ def main():
         except Exception as exc:                      # noqa: BLE001
             return 0, str(exc)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=30) as pool:
-        results = list(pool.map(hammer, range(40)))
+    # 40 个并发现在不该被拦：一个班 50 台设备在同一出口 IP 后面同时读是正常行为
+    time.sleep(7)          # 先让令牌桶回满
+    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as pool:
+        classroom = list(pool.map(hammer, range(50)))
+    classroom_codes = [code for code, _ in classroom]
+    check("一个班 50 台设备同时读全部放行",
+          set(classroom_codes) == {200},
+          f"返回码：{sorted(set(classroom_codes))}")
+
+    # 但"一台设备写死循环"仍然要被拦
+    time.sleep(7)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=160) as pool:
+        results = list(pool.map(hammer, range(160)))
     codes = [code for code, _ in results]
-    check("并发猛刷会被限流（429）", 429 in codes,
-          f"40 个并发请求，返回码：{sorted(set(codes))}")
+    check("单机猛刷仍会被限流（429）", 429 in codes,
+          f"160 个并发请求，返回码：{sorted(set(codes))}")
     limited_body = next((body for code, body in results if code == 429), "")
     if limited_body:
         check("429 里带上 retry_after",
@@ -342,9 +353,28 @@ def main():
           str(payload.get("all_url")))
     before_latest = payload.get("latest_id")
 
+    # ETag：数据没变时客户端拿 304，省掉整个响应体
+    time.sleep(0.5)
+    status, raw, _, headers = client.get(f"/api/{apiid}/all")
+    etag = headers.get("ETag") or headers.get("Etag")
+    check("/all 带上 ETag", bool(etag), str(headers.get("ETag")))
+    status, raw, _, _ = client.raw("GET", f"/api/{apiid}/all",
+                                   headers={"If-None-Match": etag or ""})
+    check("数据没变时 /all 回 304 且无内容",
+          status == 304 and raw == b"", f"status={status} len={len(raw)}")
+    status, raw, _, cheaders = client.get(f"/api/{apiid}/count")
+    cetag = cheaders.get("ETag") or cheaders.get("Etag")
+    status, raw, _, _ = client.raw("GET", f"/api/{apiid}/count",
+                                   headers={"If-None-Match": cetag or ""})
+    check("数据没变时 /count 回 304", status == 304, f"status={status}")
+
     status, raw, _, _ = client.raw(
         "POST", f"/api/{apiid}", body=json.dumps({"计数自测": 1}).encode(),
         headers={"Content-Type": "application/json"})
+    status, raw, _, headers = client.raw("GET", f"/api/{apiid}/all",
+                                         headers={"If-None-Match": etag or ""})
+    check("有新数据后 ETag 失效、重新返回全量",
+          status == 200 and len(raw) > 50, f"status={status} len={len(raw)}")
     status, raw, _, _ = client.get(f"/api/{apiid}/count")
     after = json.loads(raw)
     check("提交后计数 +1、最新编号也变了",

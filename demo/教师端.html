@@ -386,6 +386,9 @@
   var timer = 0;
   var loading = false;
   var lastTotal = -1;      // 上次看到的总条数
+  var etag = null;         // /all 的数据版本号：没变就 304，一个字节都不用传
+  var countEtag = null;    // /count 的
+  var pollDelay = 5000;    // 正常 5 秒一次；被限流时按服务端给的 retry_after 退避
 
   el("api-url").textContent = HOME + "/api/" + TASK_ID;
 
@@ -394,19 +397,27 @@
   function load(quiet) {
     if (loading) return Promise.resolve();
     loading = true;
-    return fetch(API, { cache: "no-store" })
+    var headers = {};
+    if (etag) headers["If-None-Match"] = etag;
+    return fetch(API, { cache: "no-store", headers: headers })
       .then(function (r) {
+        if (r.status === 304) {          // 数据没变：304、零字节
+          markLive();
+          return null;
+        }
         return r.json().then(function (j) {
-          return { ok: r.ok, status: r.status, body: j };
+          return { ok: r.ok, status: r.status, body: j, tag: r.headers.get("ETag") };
         });
       })
       .then(function (res) {
+        if (!res) return;
         if (!res.ok) {
           renderError((res.body && res.body.message) || ("HTTP " + res.status));
           return;
         }
         latest = res.body;
         lastTotal = res.body.total;
+        etag = res.tag;
         render(latest);
         markLive();
       })
@@ -418,11 +429,29 @@
   }
 
   /* 轻量轮询：先问 /count（几百字节），条数变了才去拉全量。
-     看板开一整天也不会把带宽和数据库拖住。 */
+     带上 ETag，数据没变时服务端直接回 304；被限流就按服务端说的等。 */
   function pollCount() {
     if (loading) return Promise.resolve();
-    return fetch(COUNT_API, { cache: "no-store" })
-      .then(function (r) { return r.json(); })
+    var headers = {};
+    if (countEtag) headers["If-None-Match"] = countEtag;
+    return fetch(COUNT_API, { cache: "no-store", headers: headers })
+      .then(function (r) {
+        if (r.status === 304) {
+          pollDelay = 5000;
+          markLive();
+          return null;
+        }
+        if (r.status === 429) {
+          // 服务端在 429 里给了 retry_after（秒），照它等，别继续撞
+          return r.json().then(function (j) {
+            pollDelay = Math.max(5, Math.ceil(Number(j.retry_after) || 5)) * 1000;
+            el("live-dot").classList.add("stale");
+          }).catch(function () { pollDelay = 10000; });
+        }
+        countEtag = r.headers.get("ETag");
+        pollDelay = 5000;
+        return r.json();
+      })
       .then(function (res) {
         if (!res || !res.ok) return;
         if (res.total !== lastTotal) {
@@ -432,6 +461,12 @@
         markLive();
       })
       .catch(function () { el("live-dot").classList.add("stale"); });
+  }
+
+  function schedule() {
+    clearTimeout(timer);
+    if (!auto) return;
+    timer = setTimeout(function () { pollCount().then(schedule, schedule); }, pollDelay);
   }
 
   function markLive() {
@@ -769,8 +804,8 @@
     auto = v;
     el("auto-btn").classList.toggle("on", v);
     el("auto-btn").textContent = v ? "自动刷新中" : "已暂停";
-    clearInterval(timer);
-    if (v) timer = setInterval(pollCount, 5000);
+    clearTimeout(timer);
+    if (v) { pollDelay = 5000; schedule(); }
   }
 
   /* -------------------------------------------------------- 图片浮层 */
@@ -807,11 +842,11 @@
   /* 页面切到后台就不再轮询，回来立刻补一次 */
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {
-      clearInterval(timer);
+      clearTimeout(timer);
     } else if (auto) {
-      pollCount();
-      clearInterval(timer);
-      timer = setInterval(pollCount, 5000);
+      clearTimeout(timer);
+      pollDelay = 5000;
+      pollCount().then(schedule, schedule);
     }
   });
 

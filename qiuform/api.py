@@ -59,14 +59,22 @@ def _task_brief(task: dict) -> dict:
     return brief
 
 
-def _read_gate_check(apiid: str):
-    """返回需要等待的秒数，0 表示放行。"""
-    burst = float(current_app.config["API_READ_BURST"])
-    rate = float(current_app.config["API_READ_RATE"])
+def _read_gate_check(apiid: str, bucket: str = "read"):
+    """返回需要等待的秒数，0 表示放行。
+
+    bucket 用来区分不同的桶：/all 走 "read"，/count 走 "count"（更宽），
+    这样看板频繁轮询计数不会把全量读取的额度用光。
+    """
+    if bucket == "count":
+        burst = float(current_app.config["API_COUNT_BURST"])
+        rate = float(current_app.config["API_COUNT_RATE"])
+    else:
+        burst = float(current_app.config["API_READ_BURST"])
+        rate = float(current_app.config["API_READ_RATE"])
     if burst <= 0 or rate <= 0:
         return 0
 
-    key = f"{apiid}|{request.remote_addr}"
+    key = f"{bucket}|{apiid}|{request.remote_addr}"
     now = time.time()
     with _read_lock:
         tokens, last = _read_buckets.get(key, (burst, now))
@@ -91,6 +99,36 @@ def _submission_out(item: dict) -> dict:
     out["_id"] = item["id"]
     out["_at"] = item["at"]
     return out
+
+
+def _not_modified(tag: str):
+    """数据没变时回 304：客户端（大屏轮询）省掉整个响应体。"""
+    from flask import make_response
+    resp = make_response("", 304)
+    resp.headers["ETag"] = tag
+    return resp
+
+
+def _etag_matches(header: str, tag: str) -> bool:
+    """按 HTTP 规范做"弱比较"。
+
+    经过 Cloudflare 之后，我们发出去的强校验值会被改写成弱校验值
+    （W/"4-224"），客户端回来的也带 W/ 前缀；比较时必须忽略这个前缀，
+    否则永远匹配不上、304 也就永远不生效。
+    """
+    if not header:
+        return False
+
+    def norm(value: str) -> str:
+        value = value.strip()
+        return value[2:].strip() if value.startswith("W/") else value
+
+    want = norm(tag)
+    for part in header.split(","):
+        part = part.strip()
+        if part == "*" or norm(part) == want:
+            return True
+    return False
 
 
 # ---------------------------------------------------------------- 写入
@@ -171,7 +209,7 @@ def read_all(apiid: str):
     if not task:
         return _fail(404, "task_not_found", "任务不存在")
 
-    wait = _read_gate_check(apiid)
+    wait = _read_gate_check(apiid, bucket="read")
     if wait:
         return _fail(429, "too_many_requests",
                      "读取太频繁了，稍等一下再试", retry_after=round(wait, 2))
@@ -192,19 +230,25 @@ def read_count(apiid: str):
     if not task:
         return _fail(404, "task_not_found", "任务不存在")
 
-    wait = _read_gate_check(apiid)
+    wait = _read_gate_check(apiid, bucket="count")
     if wait:
         return _fail(429, "too_many_requests",
                      "读取太频繁了，稍等一下再试", retry_after=round(wait, 2))
 
     total = db.count_submissions(apiid)
-    return _ok({
+    tag = f'"{total}-{db.latest_submission_id(apiid)}"'
+    if _etag_matches(request.headers.get("If-None-Match"), tag):
+        return _not_modified(tag)
+
+    body = _ok({
         "task": _task_brief(task),
         "total": total,
         "latest_id": db.latest_submission_id(apiid),
         "all_url": f"{base_url()}/api/{apiid}/all",
         "note": f"当前 {total} 条。数字变了再去拉 all_url 取全量。",
     })
+    body[0].headers["ETag"] = tag
+    return body
 
 
 def _read(apiid: str, limit, full: bool):
@@ -213,6 +257,10 @@ def _read(apiid: str, limit, full: bool):
         return _fail(404, "task_not_found", "任务不存在")
 
     total = db.count_submissions(apiid)
+    tag = f'"{total}-{db.latest_submission_id(apiid)}"'
+    if _etag_matches(request.headers.get("If-None-Match"), tag):
+        return _not_modified(tag)
+
     rows = db.list_submissions(apiid, limit=limit)
     submissions = [_submission_out(row) for row in rows]
 
@@ -227,7 +275,9 @@ def _read(apiid: str, limit, full: bool):
             f"只返回最近 {len(submissions)} 条。要拿全部数据，请访问 "
             f"{base_url()}/api/{apiid}/all"
         )
-    return _ok(body)
+    resp = _ok(body)
+    resp[0].headers["ETag"] = tag
+    return resp
 
 
 # ---------------------------------------------------------------- CORS
@@ -236,7 +286,9 @@ def _read(apiid: str, limit, full: bool):
 def add_cors(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    # 允许页面带上 If-None-Match：数据没变时拿 304，省掉整个响应体
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, If-None-Match"
+    response.headers["Access-Control-Expose-Headers"] = "ETag"
     response.headers["Access-Control-Max-Age"] = "86400"
     response.headers.setdefault("Cache-Control", "no-store")
     return response

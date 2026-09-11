@@ -230,9 +230,17 @@ code, pre, .mono {
   background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .32); color: #fff;
 }
 .card-head .btn-danger:hover { background: rgba(255, 255, 255, .3); color: #fff; }
+/* 危险卡片：头部用淡红底 + 深红字，比实心红更看得清 */
 .card.danger .card-head {
-  background: linear-gradient(135deg, #b91c1c 0%, #dc2626 62%, #ef4444 100%);
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-bottom: 1px solid #f6cbcb;
 }
+.card.danger .card-head h2 { color: #b91c1c; }
+.card.danger .card-head .ico { color: #dc2626; }
+.card.danger .btn-danger {
+  background: var(--bad); border-color: var(--bad); color: #fff;
+}
+.card.danger .btn-danger:hover { background: #b91c1c; border-color: #b91c1c; color: #fff; }
 .card-body { padding: 22px; }
 .card-body.tight { padding: 16px 22px; }
 .card.dashed { border-style: dashed; background: var(--surface-2); }

@@ -106,8 +106,6 @@ def create_app(config: dict = None) -> Flask:
     db.init_app(app)
     security.init_app(app)
 
-    # 静态资源地址带版本号，就可以放心让浏览器长时间缓存
-    app.config.setdefault("SEND_FILE_MAX_AGE_DEFAULT", 60 * 60 * 24 * 30)
     app.jinja_env.globals["ASSET_V"] = _asset_version(app)
 
     # 接口返回可读的中文，而不是 \u4e00 这种东西 ——
@@ -133,6 +131,25 @@ def create_app(config: dict = None) -> Flask:
     def inject_globals():
         from flask import g
         return {"current_user": getattr(g, "user", None), "now_ts": int(time.time())}
+
+    @app.after_request
+    def cache_headers(response):
+        """给静态资源和任务页面配上合适的缓存策略。
+
+        静态资源的地址带内容哈希（?v=…），换了内容地址就变，所以可以放心
+        让浏览器和 CDN 长期缓存 —— 之前这里是 no-cache，每次访问都要回源
+        校验一次，白白多花一个来回。
+        任务的页面 / 附件文件名不带哈希，只能给短一点的缓存。
+        """
+        path = request.path
+        if 200 <= response.status_code < 300:
+            if path.startswith("/static/") or path.startswith("/files/"):
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            elif path.startswith("/p/"):
+                html = (response.mimetype or "").startswith("text/html")
+                response.headers["Cache-Control"] = (
+                    "public, max-age=60" if html else "public, max-age=3600")
+        return response
 
     @app.errorhandler(400)
     def bad_request(exc):

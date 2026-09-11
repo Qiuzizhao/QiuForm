@@ -58,6 +58,11 @@ def get_db() -> sqlite3.Connection:
     if "db" not in g:
         conn = sqlite3.connect(current_app.config["DB_PATH"], timeout=15)
         conn.row_factory = sqlite3.Row
+        # WAL：读写可以并行，一个班同时提交时读页面不会被写卡住；
+        # synchronous=NORMAL 在 WAL 下足够安全，写入也更快。
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA busy_timeout = 5000")
         conn.execute("PRAGMA foreign_keys = ON")
         g.db = conn
     return g.db
@@ -387,6 +392,14 @@ def count_submissions(apiid: str) -> int:
     return get_db().execute(
         "SELECT COUNT(*) AS n FROM submissions WHERE apiid = ?", (apiid,)
     ).fetchone()["n"]
+
+
+def latest_submission_id(apiid: str) -> int:
+    """最新一条提交的 id，没有提交时返回 0。"""
+    row = get_db().execute(
+        "SELECT MAX(id) AS m FROM submissions WHERE apiid = ?", (apiid,)
+    ).fetchone()
+    return int(row["m"]) if row and row["m"] is not None else 0
 
 
 def delete_submission(apiid: str, submission_id: int) -> bool:

@@ -3,6 +3,7 @@
     POST /api/<apiid>        写入（JSON / 表单 / multipart 带文件）
     GET  /api/<apiid>        读出最近若干条
     GET  /api/<apiid>/all    读出全部
+    GET  /api/<apiid>/count  只回条数和最新一条的编号（给大屏轮询用）
 
 地址不鉴权、不加密，谁拿到都能读写——这是为了换取"任何网页、任何大模型
 生成的代码，接上就能用"。所以别把敏感信息往这里放。
@@ -175,6 +176,35 @@ def read_all(apiid: str):
         return _fail(429, "too_many_requests",
                      "读取太频繁了，稍等一下再试", retry_after=round(wait, 2))
     return _read(apiid, limit=None, full=True)
+
+
+@bp.route("/<apiid>/count", methods=["GET", "OPTIONS"])
+def read_count(apiid: str):
+    """轻量计数：大屏/看板先轮询这里，数字变了再去拉 /all。
+
+    一次 COUNT 加一次 MAX，几百字节的响应；数据多了也不会因为
+    "每 5 秒拉一次全量"把带宽和数据库拖住。
+    """
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    task = db.get_task(apiid)
+    if not task:
+        return _fail(404, "task_not_found", "任务不存在")
+
+    wait = _read_gate_check(apiid)
+    if wait:
+        return _fail(429, "too_many_requests",
+                     "读取太频繁了，稍等一下再试", retry_after=round(wait, 2))
+
+    total = db.count_submissions(apiid)
+    return _ok({
+        "task": _task_brief(task),
+        "total": total,
+        "latest_id": db.latest_submission_id(apiid),
+        "all_url": f"{base_url()}/api/{apiid}/all",
+        "note": f"当前 {total} 条。数字变了再去拉 all_url 取全量。",
+    })
 
 
 def _read(apiid: str, limit, full: bool):

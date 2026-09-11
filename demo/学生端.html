@@ -777,15 +777,71 @@
     if (e.target.tagName !== "BUTTON") imgInput.click();
   });
 
-  function addImages(list) {
-    Array.prototype.forEach.call(list || [], function (f) {
-      if (!/^image\//.test(f.type)) return;
-      if (f.size > 8 * 1024 * 1024) return;
-      images.push({ file: f, url: URL.createObjectURL(f) });
+  /* 上传前先在浏览器里压一遍：手机随手拍的照片常有 5~8 MB，
+     直接传在校园网里要等很久。最长边压到 1280，JPEG 质量从 0.85
+     往下试，直到小于 2 MB 为止；小图或压缩失败就原样上传。 */
+  var IMG_LIMIT_MB = 2;
+  var MAX_EDGE = 1280;
+  var compressing = 0;
+
+  function compressImage(file) {
+    return new Promise(function (resolve) {
+      if (!/^image\//.test(file.type) || file.type === "image/gif" ||
+          file.size <= IMG_LIMIT_MB * 1024 * 1024) {
+        return resolve(file);
+      }
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var w = img.width, h = img.height;
+        if (w > MAX_EDGE || h > MAX_EDGE) {
+          if (w >= h) { h = Math.round(h * MAX_EDGE / w); w = MAX_EDGE; }
+          else { w = Math.round(w * MAX_EDGE / h); h = MAX_EDGE; }
+        }
+        var canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        var limit = IMG_LIMIT_MB * 1024 * 1024;
+        (function attempt(q) {
+          canvas.toBlob(function (blob) {
+            if (!blob) return resolve(file);
+            if (blob.size <= limit || q <= 0.4) {
+              var name = (file.name || "图片").replace(/\.[^.]+$/, "") + ".jpg";
+              resolve(new File([blob], name, { type: "image/jpeg" }));
+            } else {
+              attempt(Math.max(0.4, q - 0.08));
+            }
+          }, "image/jpeg", q);
+        })(0.85);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
     });
-    renderImages();
-    clearInvalid(el("img-drop"));
-    refresh();
+  }
+
+  function addImages(list) {
+    var files = Array.prototype.filter.call(list || [], function (f) {
+      return /^image\//.test(f.type) && f.size <= 8 * 1024 * 1024;
+    });
+    if (!files.length) return;
+
+    compressing += files.length;
+    var dropTitle = el("img-drop") ? el("img-drop").firstElementChild : null;
+    var oldTitle = dropTitle ? dropTitle.innerHTML : "";
+    if (dropTitle) dropTitle.innerHTML = "正在压缩图片…";
+
+    Promise.all(files.map(compressImage)).then(function (out) {
+      out.forEach(function (f) {
+        images.push({ file: f, url: URL.createObjectURL(f) });
+      });
+      compressing -= files.length;
+      if (dropTitle) dropTitle.innerHTML = oldTitle;
+      renderImages();
+      clearInvalid(el("img-drop"));
+      refresh();
+    });
   }
   function renderImages() {
     var box = el("img-thumbs");
@@ -1151,6 +1207,10 @@
 
   on(el("submit"), "click", function () {
     var btn = this;
+    if (compressing) {
+      say("err", "图片还在压缩，稍等一下再提交。");
+      return;
+    }
     var missing = [];
     if (!el("f-name").value.trim()) missing.push(el("f-name"));
     if (!el("f-class").value) missing.push(el("f-class"));

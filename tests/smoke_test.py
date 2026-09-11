@@ -150,6 +150,12 @@ def main():
     check("静态资源地址带版本号（更新后不会用到旧缓存）",
           "app.css?v=" in landing and "app.js?v=" in landing)
 
+    # 静态资源带内容哈希，必须让浏览器/CDN 长缓存，否则每次访问都回源校验
+    _, _, _, css_headers = client.raw("GET", "/static/app.css")
+    check("静态资源带长缓存头",
+          "immutable" in (css_headers.get("Cache-Control") or ""),
+          str(css_headers.get("Cache-Control")))
+
     # 手机端：刘海屏要留安全区，viewport 得带上 viewport-fit=cover
     check("viewport 带 viewport-fit=cover",
           "viewport-fit=cover" in landing, landing[:0])
@@ -322,6 +328,28 @@ def main():
     if limited_body:
         check("429 里带上 retry_after",
               "retry_after" in json.loads(limited_body), limited_body[:120])
+
+    # 轻量计数接口：给大屏轮询用，不该像 /all 那样把全量数据搬一遍
+    time.sleep(0.5)
+    status, raw, _, _ = client.get(f"/api/{apiid}/count")
+    payload = json.loads(raw)
+    before_total = payload.get("total")
+    check("计数接口可用",
+          status == 200 and payload.get("ok") and isinstance(before_total, int),
+          f"status={status} {raw[:120]}")
+    check("计数接口给的地址是 /all",
+          (payload.get("all_url") or "").endswith(f"/api/{apiid}/all"),
+          str(payload.get("all_url")))
+    before_latest = payload.get("latest_id")
+
+    status, raw, _, _ = client.raw(
+        "POST", f"/api/{apiid}", body=json.dumps({"计数自测": 1}).encode(),
+        headers={"Content-Type": "application/json"})
+    status, raw, _, _ = client.get(f"/api/{apiid}/count")
+    after = json.loads(raw)
+    check("提交后计数 +1、最新编号也变了",
+          after.get("total") == before_total + 1 and after.get("latest_id") != before_latest,
+          f"{before_total}/{before_latest} → {after.get('total')}/{after.get('latest_id')}")
 
     status, raw, _, _ = client.get("/api/nonexistent00")
     check("不存在的任务返回 404", status == 404, f"status={status}")
@@ -508,8 +536,12 @@ fetch("http://127.0.0.1:9999/api/OLDOLDOLDOLD", {method: "POST"});
 
     status, blob, _, _ = client.raw("GET", f"/tasks/{apiid}/data.json")
     exported = json.loads(blob)
-    check("JSON 导出成功", status == 200 and exported["total"] == 8,
-          f"status={status} total={exported.get('total')}")
+    # 和接口计数对一下，避免写死条数（前面每加一次提交都要改）
+    _, raw, _, _ = client.get(f"/api/{apiid}/count")
+    expected_total = json.loads(raw)["total"]
+    check("JSON 导出成功",
+          status == 200 and exported["total"] == expected_total,
+          f"status={status} total={exported.get('total')} 期望 {expected_total}")
 
     # -------------------------------------------------- 任务始终可读可写
     print("\n7. 接口始终可读可写")

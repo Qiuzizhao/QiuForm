@@ -4,10 +4,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#3d5afe">
+<meta name="theme-color" content="#1d4ed8">
 <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v={{ ASSET_V }}">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%233d5afe'/><text x='16' y='23' font-size='19' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>Q</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%231d4ed8'/><text x='16' y='23' font-size='19' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>Q</text></svg>">
 {% block head %}{% endblock %}
 </head>
 <body>
@@ -15,7 +15,6 @@
 <header class="nav">
   <div class="nav-inner">
     <a class="brand" href="{{ url_for('tasks.index') }}">
-      <span class="brand-mark">Q</span>
       <span class="brand-name">{{ SITE_NAME }}</span>
     </a>
 

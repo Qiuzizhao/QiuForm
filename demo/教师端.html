@@ -355,7 +355,7 @@
     <div class="subs" id="subs"></div>
   </section>
 
-  <p class="foot">数据来自 <code id="api-url"></code> · 页面每 5 秒自动刷新一次</p>
+  <p class="foot">数据来自 <code id="api-url"></code> · 每 5 秒检查一次更新</p>
 </main>
 
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="图片预览">
@@ -373,8 +373,10 @@
   var HOSTED = /(^|\.)qiuzizhao\.com$/.test(location.hostname);
   var BASE = HOSTED ? "" : HOME;               // 本地打开时补上站点域名
   // 这个任务自己的接口地址：把页面传到别的任务时会自动被改写
-  var API_PATH = "/api/2ejeum6zp9k4/all";
-  var API = BASE + API_PATH;
+  var COUNT_PATH = "/api/2ejeum6zp9k4/count";
+  var ALL_PATH = "/api/2ejeum6zp9k4/all";
+  var API = BASE + ALL_PATH;
+  var COUNT_API = BASE + COUNT_PATH;
 
   function el(id) { return document.getElementById(id); }
   function on(node, type, fn) { if (node) node.addEventListener(type, fn); }
@@ -383,6 +385,7 @@
   var auto = true;
   var timer = 0;
   var loading = false;
+  var lastTotal = -1;      // 上次看到的总条数
 
   el("api-url").textContent = HOME + "/api/" + TASK_ID;
 
@@ -403,6 +406,7 @@
           return;
         }
         latest = res.body;
+        lastTotal = res.body.total;
         render(latest);
         markLive();
       })
@@ -411,6 +415,23 @@
         el("live-dot").classList.add("stale");
       })
       .then(function () { loading = false; });
+  }
+
+  /* 轻量轮询：先问 /count（几百字节），条数变了才去拉全量。
+     看板开一整天也不会把带宽和数据库拖住。 */
+  function pollCount() {
+    if (loading) return Promise.resolve();
+    return fetch(COUNT_API, { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok) return;
+        if (res.total !== lastTotal) {
+          lastTotal = res.total;
+          return load(true);
+        }
+        markLive();
+      })
+      .catch(function () { el("live-dot").classList.add("stale"); });
   }
 
   function markLive() {
@@ -749,7 +770,7 @@
     el("auto-btn").classList.toggle("on", v);
     el("auto-btn").textContent = v ? "自动刷新中" : "已暂停";
     clearInterval(timer);
-    if (v) timer = setInterval(function () { load(true); }, 5000);
+    if (v) timer = setInterval(pollCount, 5000);
   }
 
   /* -------------------------------------------------------- 图片浮层 */
@@ -788,9 +809,9 @@
     if (document.hidden) {
       clearInterval(timer);
     } else if (auto) {
-      load(true);
+      pollCount();
       clearInterval(timer);
-      timer = setInterval(function () { load(true); }, 5000);
+      timer = setInterval(pollCount, 5000);
     }
   });
 

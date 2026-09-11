@@ -75,6 +75,11 @@ systemctl reload nginx              # 重载
 sudo tar -czf ~/qiuform-backup-$(date +%F).tar.gz -C /var/lib qiuform
 ```
 
+数据库开了 WAL 模式（并发读写更快），所以 `qiuform.db` 旁边会有
+`qiuform.db-wal` / `qiuform.db-shm` 两个文件 —— 打包整个目录时它们
+已经在里面了，不用单独处理；但**别只拷 `qiuform.db` 一个文件**，
+最近没落盘的写入还在 `-wal` 里。
+
 恢复就是解回去，注意带上权限：
 `sudo tar -xzf 备份.tar.gz -C /var/lib && sudo chown -R qiuform:qiuform /var/lib/qiuform`
 

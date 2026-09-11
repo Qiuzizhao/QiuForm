@@ -832,7 +832,12 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 .kv-list { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .kv { display: inline-flex; align-items: baseline; gap: 7px; font-size: .84rem; min-width: 0; }
 .kv-k { color: var(--muted); flex: none; }
-.kv-v { color: var(--ink); font-weight: 520; word-break: break-word; }
+/* 长值（比如一整包行为记录 JSON）截到三行，免得把「最近提交」撑得老长 */
+.kv-v {
+  color: var(--ink); font-weight: 520; word-break: break-word;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 /* 值里带缩略图时改成居中对齐，否则标签会贴到图片底边 */
 .kv:has(.thumb) { align-items: center; }
 .kv .thumb { width: 46px; height: 46px; }

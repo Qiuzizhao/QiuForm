@@ -10,6 +10,9 @@ data/
 
 *.log
 
+# 临时验证用的抓取/截图脚本与产物
+.tmp_*/
+
 # 本地资料，不属于产品代码
 qiuform-demo/
 research/

@@ -5,11 +5,8 @@
 {% block page_class %}narrow{% endblock %}
 
 {% block content %}
-<div class="center" style="margin-bottom:24px">
-  <h1 style="font-size:1.4rem">创建账号</h1>
-</div>
-
 <div class="card">
+  <div class="card-head"><h2>{{ icon('plus') }} 创建账号</h2></div>
   <div class="card-body">
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

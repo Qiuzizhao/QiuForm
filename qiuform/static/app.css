@@ -738,7 +738,8 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
 
 /* ------------------------------------------------------- 产品示意窗口 */
 
-.lp-showcase { margin-bottom: 88px; animation: lp-rise .8s cubic-bezier(.22, 1, .36, 1) .3s both; }
+/* 产品示意是首页最后一块，下边距交给 .page 自己的 padding */
+.lp-showcase { margin-bottom: 0; animation: lp-rise .8s cubic-bezier(.22, 1, .36, 1) .3s both; }
 .lp-window {
   background: var(--surface); border: 1px solid var(--line-strong);
   border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-lg);
@@ -768,43 +769,10 @@ a:hover > .thumb { transform: scale(1.04); border-color: var(--accent); }
   white-space: pre; overflow-x: auto;
 }
 
-/* ------------------------------------------------------------ 区块 */
-
-.lp-section { margin-bottom: 88px; }
-.lp-section-last { margin-bottom: 0; }
-.lp-head { text-align: center; margin-bottom: 34px; }
-.lp-head h2 {
-  font-size: clamp(1.3rem, 3vw, 1.7rem);
-  letter-spacing: -.028em; margin: 0;
-}
-.lp-head p { font-size: .95rem; color: var(--muted); max-width: 44ch; margin: 0 auto; }
-
-/* ------------------------------------------------------------ 步骤 */
-
-.lp-steps {
-  list-style: none; margin: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px;
-}
-.lp-steps li {
-  background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r-lg); padding: 22px 24px;
-}
-.lp-step-num {
-  display: inline-grid; place-items: center;
-  width: 26px; height: 26px; border-radius: 50%; margin-bottom: 13px;
-  background: var(--accent); color: #fff; font-size: .78rem; font-weight: 700;
-}
-.lp-steps h3 { font-size: .96rem; letter-spacing: -.012em; margin-bottom: 6px; }
-.lp-steps p { font-size: .86rem; color: var(--muted); line-height: 1.7; margin: 0; }
-
 /* ------------------------------------------------------------ 窄屏 */
 
-@media (max-width: 900px) {
-  .lp-steps { grid-template-columns: minmax(0, 1fr); }
-}
 @media (max-width: 760px) {
   .lp-hero { padding: 56px 0 44px; }
-  .lp-showcase, .lp-section { margin-bottom: 60px; }
   .lp-window-body { grid-template-columns: minmax(0, 1fr); }
   .lp-pane + .lp-pane { border-left: 0; border-top: 1px solid #232b40; }
 }
